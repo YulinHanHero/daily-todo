@@ -240,6 +240,45 @@ __APP__
       assert('周视图卡片等高', uniq.length <= 1, '间距种类=' + uniq.join(','))
     }
 
+    /* --- 月视图：同一天有无徽标时，日期数字的垂直位置必须一致 --- */
+    {
+      var mTab = document.querySelector('.view-tabs .tab[data-mode="month"]')
+      mTab.click()
+      await sleep(200)
+      /* 造一条落在当月的任务，制造「有徽标」与「无徽标」并存 */
+      var mv = new Date()
+      var mkDate = mv.getFullYear() + '-' + String(mv.getMonth() + 1).padStart(2, '0') + '-' + String(mv.getDate()).padStart(2, '0')
+      allTodos = [{
+        id: 900, title: '对齐测试', done: false, due_date: mkDate, repeat_days: null,
+        subject: 'yuwen', priority: false, notes: '', created_at: mkDate + 'T08:00:00Z'
+      }]
+      expandRange(); render()
+      await sleep(150)
+      /* 按行分组：同一行内各格的日期相对格顶偏移必须相同 */
+      var rowMap = {}
+      var mCells = document.querySelectorAll('#monthGrid .month-cell')
+      for (var mi = 0; mi < mCells.length; mi++) {
+        var mc = mCells[mi]
+        var mDay = mc.querySelector('.m-day')
+        if (!mDay) continue
+        var mRc = mc.getBoundingClientRect()
+        var mRd = mDay.getBoundingClientRect()
+        var mKey = Math.round(mRc.top)
+        if (!rowMap[mKey]) rowMap[mKey] = []
+        rowMap[mKey].push(Math.round((mRd.top - mRc.top) * 10) / 10)
+      }
+      var badRows = []
+      for (var mk in rowMap) {
+        var arr = rowMap[mk]
+        var uniq = []
+        for (var ai = 0; ai < arr.length; ai++) {
+          if (uniq.indexOf(arr[ai]) === -1) uniq.push(arr[ai])
+        }
+        if (uniq.length > 1) badRows.push(mk + ':' + uniq.join('/'))
+      }
+      assert('月视图日期对齐', badRows.length === 0, badRows.length ? badRows.join(' ') : '所有行偏移一致')
+    }
+
     assert('无 JS 运行时错误', window.__errors.length === 0, window.__errors.join(' | '))
   }
 

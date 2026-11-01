@@ -417,18 +417,22 @@
   .month-weekdays span { text-align: center; font-size: 12px; color: var(--muted); padding: 4px 0 8px; }
   .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
   .month-cell {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    display: flex; flex-direction: column; align-items: center;
+    /* 用 justify-content: flex-start（而非 center）：某天有徽标时内容会变成
+       「日期 + 徽标」两行，若垂直居中，日期会被整体下压的内容顶得向上偏
+       （实测偏移 9.5px）。改为顶对齐后，日期位置在有无徽标时完全一致。 */
+    justify-content: flex-start;
     padding: 5px 0 4px; border-radius: 10px; cursor: pointer; min-height: 52px;
   }
   .month-cell:active { background: var(--surface-3); }
   .month-cell.dim { opacity: .32; }
-  .m-day { font-size: 14px; }
+  .m-day { font-size: 14px; flex: none; }
   .month-cell.today .m-day {
     background: var(--primary); color: #fff; width: 26px; height: 26px;
     display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 600;
   }
   .m-badge {
-    margin-top: 3px; min-width: 16px; height: 16px; padding: 0 5px;
+    margin-top: 3px; min-width: 16px; height: 16px; padding: 0 5px; flex: none;
     border-radius: 999px; background: var(--primary-soft); color: var(--primary);
     font-size: 10px; line-height: 16px; text-align: center;
   }
