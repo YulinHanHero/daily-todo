@@ -1,78 +1,125 @@
-# 学习清单 v7 — 改造说明
+# 学习清单 · Daily Todo
 
-基于线上「今日待办」应用（`wbapp_VhwZMNS1PhCN2qpGcWTv6k`）的 v7 版本改造。
+一个面向学生的待办事项管理应用。**单文件 HTML + WorkBuddy 云数据库**，无需构建工具，克隆下来直接就能跑。
+
+🌐 线上应用：<https://daily-todo-67205.app.workbuddy.host>
+
+---
+
+## 功能
+
+| 模块 | 说明 |
+|---|---|
+| **三视图** | 日 / 周 / 月。点月视图任意日期可跳转到那一天 |
+| **任务详情编辑** | 点任意任务打开面板：改标题、截止日期、科目、重复星期、备注、优先级 |
+| **优先级星标** | 一键标星，重要任务带红色左边框，可置顶排序 |
+| **搜索** | 按标题或备注模糊匹配 |
+| **科目筛选** | 按科目过滤，chip 只显示当前范围内有任务的科目 |
+| **多种排序** | 默认 / 重要优先 / 截止日期 / 创建时间 / 标题 |
+| **批量操作** | 开启「批量」多选，批量标记完成或批量删除 |
+| **删除撤销** | 删除后 6 秒内可撤销，防手滑 |
+| **自定义科目** | 内置 5 个（语文/数学/英语/科学/其他）之外可新增带颜色的科目，跨设备同步 |
+| **批量粘贴解析** | 粘贴整段作业，自动按「语:1.」「2、」这类前缀与编号拆成多条任务并打科目标签 |
+| **统计视图** | 本月完成率、连续打卡天数、近 7 天完成趋势、各科目任务量分布 |
+| **深色模式** | 右上角切换，选择被记住，全站配色随 CSS 变量联动 |
+| **登录** | 手机验证码 / 密码 / 微信三种方式，数据按用户隔离 |
+
+---
 
 ## 目录结构
 
 ```
 daily-todo/
-├── index.html              # 最终产物（单文件，含内联 CSS/JS，可直接部署）
-├── preview.html            # 本地预览页（内置 mock 云服务 + 样例数据，无需登录即可看效果）
-├── template.html           # 页面骨架模板
+├── index.html              # 部署产物（单文件，含内联 CSS/JS）
+├── preview.html            # 本地预览页：内置 mock 云服务与样例数据，无需登录
+├── schema.sql              # 数据库结构 + RLS 策略，可在新环境一键还原
 ├── build.py                # 构建脚本：blocks/ → index.html
-├── selftest.template.html  # 自测用例模板
-└── blocks/
-    ├── style.css           # 全部样式（含深色主题变量）
-    ├── body.html           # 页面结构
-    ├── app.js              # 全部逻辑
-    └── mock-cloud.js       # 仅自测/预览用：模拟云 SDK
+├── template.html           # 页面骨架
+├── selftest.template.html  # 离线自测用例（39 条断言）
+├── blocks/
+│   ├── style.css           # 全部样式（CSS 变量驱动深色主题）
+│   ├── body.html           # 页面结构
+│   ├── app.js              # 全部逻辑
+│   └── mock-cloud.js       # 仅自测/预览用：模拟云 SDK
+├── .gitignore
+└── .gitattributes
 ```
 
-## 构建
+---
+
+## 本地开发
+
+源码在 `blocks/` 下，**改完重新构建**即可：
 
 ```bash
-python build.py     # 生成 index.html
+python build.py        # 生成 index.html
 ```
 
-改代码请改 `blocks/` 下的文件，然后重新执行构建；不要直接改 `index.html`（会被覆盖）。
+不要直接改 `index.html` —— 它是构建产物，会被覆盖。
 
-## 数据库变更
+### 预览（无需登录、无需网络）
 
-应用 `wbapp_VhwZMNS1PhCN2qpGcWTv6k`，全部走 `workbuddy_cloudservice_db_exec_sql`：
+直接用浏览器打开 `preview.html`。它内置了一个模拟云服务（`blocks/mock-cloud.js`）和一组样例数据，可以完整体验所有功能。
 
-| 变更 | 内容 |
-|---|---|
-| `todos` 加列 | `priority BOOLEAN NOT NULL DEFAULT false`、`notes TEXT NOT NULL DEFAULT ''` |
-| 新建表 | `subjects`（id / owner_id / name / color / sort_order / created_at） |
-| `subjects` 授权 | `GRANT SELECT, INSERT, UPDATE, DELETE TO authenticated, anon` |
-| `subjects` RLS | 4 条 owner-only 策略（select / insert / update / delete） |
-| 索引 | `subjects(owner_id, name)` 唯一、`todos(owner_id, due_date)` |
-
-`todos` 原有列与策略未改动，历史数据不受影响。
-
-## 新增功能
-
-1. **任务详情与编辑** — 点击任意任务打开详情面板，可改标题、截止日期、科目、重复星期、备注、优先级，支持删除
-2. **优先级星标** — 列表内一键标星/取消，重要任务带红色左边框并可置顶排序
-3. **搜索** — 按标题或备注模糊匹配
-4. **科目筛选** — 按科目 chip 过滤，只显示当前范围有任务的科目
-5. **多种排序** — 默认 / 重要优先 / 截止日期 / 创建时间 / 标题
-6. **批量操作** — 开启「批量」后多选，支持批量标记完成、批量删除
-7. **删除撤销** — 删除后 6 秒内可撤销
-8. **自定义科目** — 内置 5 个（语数英科其他），可新增带颜色的自定义科目，同步到 `subjects` 表、跨设备可见；批量粘贴作业时也能识别自定义科目名前缀
-9. **统计视图** — 新增「统计」标签页：本月完成率、连续打卡天数、近 7 天趋势柱状图、各科目任务量分布
-10. **深色模式** — 右上角切换，记忆到 localStorage，全站配色随主题变量联动
-
-## 已知实现细节
-
-- `id` 列是 `bigint`，PostgREST 可能返回字符串。所有按 id 的查询统一走 `numId()` 转数字，避免 `.eq()` / `.in()` 类型不匹配导致查不到行
-- 重复任务在日/周视图按 `repeat_days` 展开成多条实例；完成状态是**整条任务共享**的（改一次全部同步），这是原有行为，未改
-- `subjects` 表对自定义科目名建了 `(owner_id, name)` 唯一索引，重名会返回 23505，前端已做友好提示
-
-## 自测
+### 跑自测
 
 ```bash
 # 终端 1
-cd daily-todo && python -m http.server 8899 --bind 127.0.0.1
-# 终端 2：构建自测页并跑
+python -m http.server 8899 --bind 127.0.0.1
+
+# 终端 2：构建自测页
 python - <<'EOF'
 import io
-tpl=io.open('selftest.template.html','r',encoding='utf-8').read()
-for f,k in [('blocks/style.css','__STYLE__'),('blocks/body.html','__BODY__'),('blocks/app.js','__APP__'),('blocks/mock-cloud.js','__MOCK__')]:
-    tpl=tpl.replace(k, io.open(f,'r',encoding='utf-8').read().replace('</script>','<\\/script>'))
+tpl = io.open('selftest.template.html', encoding='utf-8').read()
+for f, k in [('blocks/style.css','__STYLE__'), ('blocks/body.html','__BODY__'),
+             ('blocks/app.js','__APP__'), ('blocks/mock-cloud.js','__MOCK__')]:
+    tpl = tpl.replace(k, io.open(f, encoding='utf-8').read().replace('</script>','<\\/script>'))
 io.open('selftest.html','w',encoding='utf-8',newline='\n').write(tpl)
 EOF
-chrome --headless=new --dump-dom --virtual-time-budget=20000 "http://127.0.0.1:8899/selftest.html"
+
+# 终端 3
+chrome --headless=new --dump-dom --virtual-time-budget=20000 \
+  "http://127.0.0.1:8899/selftest.html" | grep -A50 "TEST REPORT"
 ```
 
 当前结果：**39/39 断言通过，0 个 JS 运行时错误**。
+
+---
+
+## 数据库
+
+后端是 WorkBuddy 托管的 PostgreSQL，结构与 RLS 策略完整记录在 [`schema.sql`](schema.sql)。
+
+| 表 | 说明 |
+|---|---|
+| `todos` | 待办事项。`owner_id` 由 `auth.uid()` 自动填充，RLS 按用户隔离 |
+| `subjects` | 用户自定义科目，同样按 `owner_id` 隔离 |
+
+关键设计：
+- `owner_id` 是 `TEXT`（`auth.uid()` 返回 text，不是 uuid），且带 `DEFAULT auth.uid()` —— 前端永远不发送它
+- 写入后必须 `.select()` 读回，空数组代表 RLS 拦截了，不能当成功处理
+- `id` 列是 `bigint`，PostgREST 可能返回字符串，查询前统一转数字（见 `numId()`）
+
+> 数据库本身托管在 WorkBuddy 云服务上，不在本仓库里。`schema.sql` 用于在新环境重建结构。
+
+---
+
+## 技术说明
+
+- **纯静态**：单个 HTML 文件，CSS 与 JS 全部内联，无构建依赖、无框架
+- **云 SDK**：`@tencent-ai/workbuddy-cloud-sdk@dev`，通过 CDN `<script>` 引入，暴露全局 `WorkBuddyCloud`
+- **数据访问**：supabase-js 风格的 PostgREST 客户端，`from().select().eq().order()` 链式查询
+- **主题**：CSS 自定义属性 + `body.dark` 覆盖，切换只改一个 class
+
+---
+
+## 已知行为
+
+- 重复任务在日/周视图按 `repeat_days` 展开成多条实例，**完成状态是整条任务共享的**（勾一次全部同步）
+- 自定义科目名在 `(owner_id, name)` 上有唯一索引，重名会返回 `23505`，前端已做友好提示
+
+---
+
+## 许可
+
+仅供个人学习使用。
