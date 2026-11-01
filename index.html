@@ -407,7 +407,14 @@
   .w-item .star-btn { font-size: 14px; }
   .w-item .del-btn { font-size: 17px; width: 28px; height: 28px; }
   .w-item.pri .w-title { font-weight: 600; }
-  .week-empty { font-size: 13px; color: var(--muted-3); padding: 4px 0 2px; }
+  /* 空态与有任务时的内容盒高度必须一致，否则有任务的卡片会更高，
+     把后面每天的日期整体顶下去（表现为「有任务时日期向上偏」）。
+     .w-item 高 28px（被 .del-btn 的 height 撑起），这里给两者统一 28px。 */
+  .week-items { min-height: 28px; }
+  .week-empty {
+    font-size: 13px; color: var(--muted-3);
+    min-height: 28px; display: flex; align-items: center;
+  }
 
   /* ---------- 月视图 ---------- */
   .month-card {

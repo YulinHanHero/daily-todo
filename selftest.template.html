@@ -220,6 +220,26 @@ __APP__
         '日视图 ' + dayCountBefore + ' 条 vs 月视图徽标 ' + badgeVal)
     }
 
+    /* --- 周视图：有无任务时，各天卡片的日期位置必须对齐 --- */
+    {
+      var wkTab = document.querySelector('.view-tabs .tab[data-mode="week"]')
+      wkTab.click()
+      await sleep(200)
+      var tops = []
+      var cards = document.querySelectorAll('#weekPane .week-day')
+      for (var wi = 0; wi < cards.length; wi++) {
+        var hd = cards[wi].querySelector('.week-day-header')
+        if (hd) tops.push(Math.round(hd.getBoundingClientRect().top))
+      }
+      var gaps = []
+      for (var wj = 1; wj < tops.length; wj++) gaps.push(tops[wj] - tops[wj - 1])
+      var uniq = []
+      for (var wk2 = 0; wk2 < gaps.length; wk2++) {
+        if (uniq.indexOf(gaps[wk2]) === -1) uniq.push(gaps[wk2])
+      }
+      assert('周视图卡片等高', uniq.length <= 1, '间距种类=' + uniq.join(','))
+    }
+
     assert('无 JS 运行时错误', window.__errors.length === 0, window.__errors.join(' | '))
   }
 
