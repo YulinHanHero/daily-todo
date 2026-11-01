@@ -2,7 +2,7 @@
 
 一个面向学生的待办事项管理应用。**单文件 HTML + WorkBuddy 云数据库**，无需构建工具，克隆下来直接就能跑。
 
-🌐 线上应用：<https://daily-todo-67205.app.workbuddy.host>
+🌐 线上应用：<https://daily-todo-16347.app.workbuddy.host/?sharecode=DTVQOPGVE7>
 
 ---
 
@@ -31,6 +31,7 @@
 ```
 daily-todo/
 ├── index.html              # 部署产物（单文件，含内联 CSS/JS）
+├── public-config.json      # 云服务配置（构建时注入，业务代码不硬编码）
 ├── preview.html            # 本地预览页：内置 mock 云服务与样例数据，无需登录
 ├── schema.sql              # 数据库结构 + RLS 策略，可在新环境一键还原
 ├── build.py                # 构建脚本：blocks/ → index.html
@@ -56,6 +57,19 @@ python build.py        # 生成 index.html
 ```
 
 不要直接改 `index.html` —— 它是构建产物，会被覆盖。
+
+### 换环境 / 换应用
+
+云服务配置集中在 [`public-config.json`](public-config.json)，构建时由 `build.py`
+注入到 `blocks/app.js` 的 `__PUBLIC_CONFIG__` 占位符。业务代码里不出现
+`endpoint` / `publishableKey`，所以换应用只需：
+
+1. 从 `workbuddy_cloud_service` 的返回里取新的 `publicConfig`
+2. 更新 `public-config.json`
+3. 重新 `python build.py` 并部署
+
+> 云服务要求请求的 Origin 与应用域名**精确匹配**，因此域名和 `publishableKey`
+> 必须成对来自同一个应用 —— 这也是把配置抽出来的原因。
 
 ### 预览（无需登录、无需网络）
 
@@ -89,6 +103,12 @@ chrome --headless=new --dump-dom --virtual-time-budget=20000 \
 ## 数据库
 
 后端是 WorkBuddy 托管的 PostgreSQL，结构与 RLS 策略完整记录在 [`schema.sql`](schema.sql)。
+
+| | |
+|---|---|
+| 应用 ID | `wbapp_2KdwIDWsJsXPsOA8kTQM4O` |
+| 云服务资源 | `wbcs_hwM4JC4aKEmoXG0HERh7ry` |
+| 数据面域名 | `https://daily-todo-16347.app.workbuddy.host` |
 
 | 表 | 说明 |
 |---|---|

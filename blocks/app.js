@@ -1,10 +1,6 @@
 /* ================= 云服务客户端（值来自 publicConfig） ================= */
-var publicConfig = {
-  resourceId: 'wbcs_Z3So4xWzbHjQOwT5WTaKZJ',
-  endpoint: 'https://daily-todo-67205.app.workbuddy.host',
-  oauthRelayBaseUrl: 'https://www.workbuddy.cn/v2/as/genie-baas/oauth',
-  publishableKey: 'wbpk_VhwZMNS1PhCN2qpGcWTv6k_tuOKZ1PWPIBq0sCx78AC7Ub4eWPdawB4'
-}
+/* publicConfig 由构建脚本注入（见 build.py / public-config.json）。 */
+__PUBLIC_CONFIG__
 
 var cloud = null
 try {

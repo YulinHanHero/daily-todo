@@ -1,6 +1,11 @@
 -- 学习清单 v7 · 数据库结构
 -- 目标环境：WorkBuddy 云服务（PostgreSQL）
--- 应用 ID：wbapp_VhwZMNS1PhCN2qpGcWTv6k
+-- 当前应用 ID：wbapp_2KdwIDWsJsXPsOA8kTQM4O
+--   域名：https://daily-todo-16347.app.workbuddy.host
+--   云服务资源：wbcs_hwM4JC4aKEmoXG0HERh7ry
+--
+-- 注意：本文件里的语句可重复执行（CREATE TABLE IF NOT EXISTS / DROP POLICY IF EXISTS），
+--   但平台的 exec_sql 一次只能执行一条语句，请逐条执行。
 --
 -- 说明：
 --   1. owner_id 由数据库用 auth.uid() 自动填充，前端不发送；
@@ -91,8 +96,10 @@ CREATE POLICY subjects_delete_own ON public.subjects
 
 
 -- ============================================================
--- 与既有线上库的差异（v6 → v7）
---   todos 已存在时只需补两列：
+-- 与 v6 旧库（wbapp_VhwZMNS1PhCN2qpGcWTv6k）的差异
+--   v6 的 todos 表没有 priority / notes 两列。
+--   若在旧库上升级，只需补这两列：
 --     ALTER TABLE public.todos ADD COLUMN priority BOOLEAN NOT NULL DEFAULT false;
 --     ALTER TABLE public.todos ADD COLUMN notes    TEXT    NOT NULL DEFAULT '';
+--   旧库的用户历史数据不会自动迁移到新库。
 -- ============================================================
