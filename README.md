@@ -36,7 +36,8 @@ daily-todo/
 ├── schema.sql              # 数据库结构 + RLS 策略，可在新环境一键还原
 ├── build.py                # 构建脚本：blocks/ → index.html
 ├── template.html           # 页面骨架
-├── selftest.template.html  # 离线自测用例（39 条断言）
+├── selftest.template.html  # 离线自测用例（40 条断言）
+├── build_selftest.py      # 自测页构建脚本
 ├── blocks/
 │   ├── style.css           # 全部样式（CSS 变量驱动深色主题）
 │   ├── body.html           # 页面结构
@@ -82,21 +83,14 @@ python build.py        # 生成 index.html
 python -m http.server 8899 --bind 127.0.0.1
 
 # 终端 2：构建自测页
-python - <<'EOF'
-import io
-tpl = io.open('selftest.template.html', encoding='utf-8').read()
-for f, k in [('blocks/style.css','__STYLE__'), ('blocks/body.html','__BODY__'),
-             ('blocks/app.js','__APP__'), ('blocks/mock-cloud.js','__MOCK__')]:
-    tpl = tpl.replace(k, io.open(f, encoding='utf-8').read().replace('</script>','<\\/script>'))
-io.open('selftest.html','w',encoding='utf-8',newline='\n').write(tpl)
-EOF
+python build_selftest.py
 
 # 终端 3
 chrome --headless=new --dump-dom --virtual-time-budget=20000 \
   "http://127.0.0.1:8899/selftest.html" | grep -A50 "TEST REPORT"
 ```
 
-当前结果：**39/39 断言通过，0 个 JS 运行时错误**。
+当前结果：**40/40 断言通过，0 个 JS 运行时错误**。
 
 ---
 
@@ -136,6 +130,8 @@ chrome --headless=new --dump-dom --virtual-time-budget=20000 \
 ## 已知行为
 
 - 重复任务在日/周视图按 `repeat_days` 展开成多条实例，**完成状态是整条任务共享的**（勾一次全部同步）
+- 重复任务的展开遵循其真实周期 `[due_date, repeat_end]`；`repeat_end` 为空表示无限重复
+- 各视图的计数口径一致：同一天的日视图条数 = 月视图该格徽标数
 - 自定义科目名在 `(owner_id, name)` 上有唯一索引，重名会返回 `23505`，前端已做友好提示
 
 ---
