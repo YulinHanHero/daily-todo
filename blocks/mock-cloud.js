@@ -14,7 +14,8 @@
       { id: 2, title: '数学口算 20 题', done: true, due_date: TODAY, repeat_days: null, subject: 'shuxue', priority: true, notes: '限时 5 分钟', created_at: TODAY + 'T08:05:00Z', owner_id: 'u1' },
       { id: 3, title: '背英语单词 Unit 3', done: false, due_date: TODAY, repeat_days: [1, 2, 3, 4, 5, 6, 7], repeat_end: null, subject: 'yingyu', priority: false, notes: '', created_at: TODAY + 'T08:10:00Z', owner_id: 'u1' },
       { id: 4, title: '科学观察日记', done: false, due_date: TODAY, repeat_days: null, subject: 'kexue', priority: false, notes: '', created_at: TODAY + 'T08:12:00Z', owner_id: 'u1' },
-      { id: 5, title: '钢琴练习 30 分钟', done: false, due_date: TODAY, repeat_days: null, subject: 'c99', priority: false, notes: '音阶 1-8', created_at: TODAY + 'T08:20:00Z', owner_id: 'u1' }
+      { id: 5, title: '钢琴练习 30 分钟', done: false, due_date: TODAY, repeat_days: null, subject: 'c99', priority: false, notes: '音阶 1-8', created_at: TODAY + 'T08:20:00Z', owner_id: 'u1' },
+      { id: 6, title: '只到今天为止的重复', done: false, due_date: TODAY, repeat_days: [1, 2, 3, 4, 5, 6, 7], repeat_end: TODAY, subject: 'qita', priority: false, notes: '', created_at: TODAY + 'T08:30:00Z', owner_id: 'u1' }
     ],
     subjects: [
       { id: 99, owner_id: 'u1', name: '音乐', color: '#0891b2', sort_order: 0, created_at: TODAY + 'T07:00:00Z' }

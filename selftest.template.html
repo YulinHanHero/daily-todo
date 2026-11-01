@@ -11,6 +11,7 @@ __STYLE__
 <body>
 __BODY__
 <script>__MOCK__</script>
+<script>__PUBLIC_CONFIG__</script>
 <script>
 window.__errors = []
 window.addEventListener('error', function (e) { window.__errors.push('ERR ' + String(e.message) + ' @ ' + (e.filename||'') + ':' + (e.lineno||'')) })
@@ -50,7 +51,7 @@ __APP__
 
     /* --- 日视图渲染 --- */
     var items = document.querySelectorAll('#todoList .todo-item')
-    assert('日视图渲染任务', items.length === 5, '渲染 ' + items.length + ' 条')
+    assert('日视图渲染任务', items.length === 6, '渲染 ' + items.length + ' 条')
 
     var subjTags = document.querySelectorAll('#todoList .subj-tag')
     assert('科目标签渲染', subjTags.length >= 4, '标签 ' + subjTags.length + ' 个')
@@ -58,7 +59,7 @@ __APP__
     assert('自定义科目「音乐」生效', musicTag, '自定义科目已渲染')
 
     var stars = document.querySelectorAll('#todoList .star-btn')
-    assert('重要星标渲染', stars.length === 5, '星标 ' + stars.length + ' 个')
+    assert('重要星标渲染', stars.length === 6, '星标 ' + stars.length + ' 个')
     assert('重要任务高亮', document.querySelectorAll('#todoList .star-btn.on').length === 1, '标星 ' + document.querySelectorAll('#todoList .star-btn.on').length + ' 个')
 
     var notesEl = document.querySelector('#todoList .todo-notes')
@@ -180,14 +181,43 @@ __APP__
     if (delBtn) {
       delBtn.click()
       await sleep(300)
-      assert('删除生效', window.__mockStore.todos.length === 4, '剩余 ' + window.__mockStore.todos.length + ' 条')
+      assert('删除生效', window.__mockStore.todos.length === 5, '剩余 ' + window.__mockStore.todos.length + ' 条')
       var undoBtn = document.getElementById('undoBtn')
       assert('撤销按钮出现', !!undoBtn, '')
       if (undoBtn) {
         undoBtn.click()
         await sleep(300)
-        assert('撤销恢复数据', window.__mockStore.todos.length === 5, '恢复后 ' + window.__mockStore.todos.length + ' 条')
+        assert('撤销恢复数据', window.__mockStore.todos.length === 6, '恢复后 ' + window.__mockStore.todos.length + ' 条')
       }
+    }
+
+    /* --- 视图计数一致性：同一天，日视图条数必须等于月视图徽标数 --- */
+    {
+      var wed = new Date(2026, 10, 4)   // 2026-11-04
+      var dayCountBefore = 0
+      var badgeMap = {}
+      /* 先取月视图徽标 */
+      var monthTab = document.querySelector('.view-tabs .tab[data-mode="month"]')
+      monthTab.click()
+      await sleep(200)
+      var cells = document.querySelectorAll('#monthGrid .month-cell')
+      for (var ci = 0; ci < cells.length; ci++) {
+        var cd = cells[ci].querySelector('.m-day')
+        var cb = cells[ci].querySelector('.m-badge')
+        if (cd && cb && cd.textContent === String(wed.getDate())) {
+          badgeMap[wed.getDate()] = cb.textContent
+        }
+      }
+      /* 再取日视图条数 */
+      var dTab = document.querySelector('.view-tabs .tab[data-mode="day"]')
+      dTab.click()
+      await sleep(150)
+      goToDay(wed)
+      await sleep(200)
+      dayCountBefore = document.querySelectorAll('#todoList .todo-item').length
+      var badgeVal = badgeMap[wed.getDate()]
+      assert('视图计数一致性', badgeVal === undefined || String(dayCountBefore) === String(badgeVal),
+        '日视图 ' + dayCountBefore + ' 条 vs 月视图徽标 ' + badgeVal)
     }
 
     assert('无 JS 运行时错误', window.__errors.length === 0, window.__errors.join(' | '))

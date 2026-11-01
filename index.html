@@ -1445,17 +1445,33 @@ function expandBetween(start, end) {
     }
     var startKey = String(t.due_date || '').slice(0, 10)
     var endKey = String(t.repeat_end || '').slice(0, 10)
-    var beginStr = startKey > fmtDate(start) ? startKey : fmtDate(start)
-    var endStr = endKey && endKey < fmtDate(end) ? endKey : fmtDate(end)
-    var beginDate = parseDate(beginStr)
-    var endDate = parseDate(endStr)
-    var days = Math.round((endDate - beginDate) / 86400000)
-    if (days < 0) days = 0
-    for (var i = 0; i <= days; i++) {
-      var d = addDays(beginDate, i)
+    /* 重复周期 = [due_date, repeat_end]（repeat_end 为空则无限重复）。
+       关键：必须遍历「任务的真实周期」，不能把周期裁剪到查询范围内。
+       裁剪会让起止日落在范围外的任务错误地命中范围边界那一天。
+       例：due=11-01、repeat_end=11-01、repeat_days=[3,5] 的任务，
+           真实周期只有 11-01（周日）一天，周三不该有它；
+           若把周期裁成 [11-04, 11-04]，周三就会被错误命中。 */
+    var beginDate = parseDate(startKey)
+    var endDate = endKey ? parseDate(endKey) : null
+    var qStartKey = fmtDate(start)
+    var qEndDate = startOfDay(end)
+
+    /* 任务周期还没开始 → 本范围内不会有实例 */
+    if (beginDate > qEndDate) return
+
+    /* 遍历起点：任务起始日 与 「查询起点前 7 天」的较晚者。
+       重复间隔最多 7 天，往前推 7 天足以覆盖边界，
+       同时避免为很早的历史任务白跑成千上万天。 */
+    var floorDate = addDays(startOfDay(start), -7)
+    var iterDate = beginDate > floorDate ? beginDate : floorDate
+    var limit = endDate && endDate < qEndDate ? endDate : qEndDate
+
+    for (var d = iterDate; d <= limit; d = addDays(d, 1)) {
+      var dKey = fmtDate(d)
+      if (dKey < qStartKey) continue
       var iso = jsDowToIso(d.getDay())
       if (rp.indexOf(iso) !== -1) {
-        list.push(makeInstance(t, fmtDate(d), true))
+        list.push(makeInstance(t, dKey, true))
       }
     }
   })
