@@ -1,0 +1,276 @@
+<body data-page-node-id="tXkjl1CCwa0o0sgwKqIcfj">
+
+<div id="toast" data-page-node-id="7LEXyBFXv6csIeBqCofUqS"></div>
+
+<!-- 登录视图 -->
+<div id="authView" class="view active" data-page-node-id="jTpMYmSEEsuVM9s6t6biND">
+  <div class="auth-card" data-page-node-id="CwzoePCLMTEdNsvoewU3nf">
+    <div class="brand-icon" data-page-node-id="mE6GYVae8eAKBjdVM9TUe3">
+      <svg viewBox="0 0 120 120" width="88" height="88" role="img" aria-label="打开的书 logo">
+        <path d="M60 28 C42 22 24 22 10 28 L10 92 C24 86 42 86 60 92 Z" fill="#4f7cff"/>
+        <path d="M60 28 C78 22 96 22 110 28 L110 92 C96 86 78 86 60 92 Z" fill="#7a5cff"/>
+        <path d="M60 28 C42 22 24 22 10 28 L10 92 C24 86 42 86 60 92 Z" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="2"/>
+        <line x1="60" y1="30" x2="60" y2="91" stroke="#fff" stroke-opacity=".6" stroke-width="2"/>
+        <line x1="22" y1="44" x2="50" y2="44" stroke="#fff" stroke-opacity=".85" stroke-width="3" stroke-linecap="round"/>
+        <line x1="22" y1="56" x2="50" y2="56" stroke="#fff" stroke-opacity=".7" stroke-width="3" stroke-linecap="round"/>
+        <line x1="22" y1="68" x2="44" y2="68" stroke="#fff" stroke-opacity=".55" stroke-width="3" stroke-linecap="round"/>
+        <line x1="70" y1="44" x2="98" y2="44" stroke="#fff" stroke-opacity=".85" stroke-width="3" stroke-linecap="round"/>
+        <line x1="70" y1="56" x2="98" y2="56" stroke="#fff" stroke-opacity=".7" stroke-width="3" stroke-linecap="round"/>
+        <line x1="70" y1="68" x2="84" y2="68" stroke="#fff" stroke-opacity=".55" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="brand-title" data-page-node-id="etk199PUKXqdH3IOuxznWa">学习清单</div>
+    <p class="brand-sub" data-page-node-id="Tr5ggF8bCryn1oUxnbSlDK">登录后开始管理你的一天</p>
+
+    <div class="login-tabs" data-page-node-id="tabRowLogin">
+      <button type="button" class="ltab active" id="tabOtp" data-page-node-id="tabOtpBtn">验证码登录</button>
+      <button type="button" class="ltab" id="tabPwd" data-page-node-id="tabPwdBtn">密码登录</button>
+    </div>
+
+    <form id="loginForm" class="login-pane active" novalidate data-page-node-id="GFVJALqekYVWzr2kksdBvG">
+      <div class="field" data-page-node-id="4D82It9JnGesLdMNLCOUFt">
+        <input id="phoneInput" type="tel" inputmode="numeric" maxlength="11" placeholder="请输入手机号" autocomplete="tel" data-page-node-id="EVcUBBIouuno4Olrz4XfIe">
+        <button type="button" id="sendCodeBtn" class="send-btn" data-page-node-id="ittscQ0kCmjpZqIKDYoxDz">获取验证码</button>
+      </div>
+      <p class="field-error" id="phoneError" data-page-node-id="f7ePdOkOboTqSG4IOeKWED"></p>
+      <input id="codeInput" class="code-input" type="tel" inputmode="numeric" maxlength="6" placeholder="输入验证码" autocomplete="one-time-code" data-page-node-id="bMgEC1VY74GKPMLOBXWpjF">
+      <button type="submit" id="loginBtn" class="btn-primary" data-page-node-id="6EcIml2kLlbtJoW0qAb2jz">登录 / 注册</button>
+    </form>
+
+    <form id="pwdForm" class="login-pane" novalidate data-page-node-id="pwdFormNode">
+      <input id="pwdPhoneInput" type="tel" inputmode="numeric" maxlength="11" placeholder="手机号" autocomplete="username">
+      <p class="field-error" id="pwdPhoneError"></p>
+      <input id="pwdInput" type="password" placeholder="密码" autocomplete="current-password">
+      <p class="field-error" id="pwdError"></p>
+      <button type="submit" id="pwdLoginBtn" class="btn-primary">登录</button>
+      <button type="button" id="toRegisterBtn" class="btn-ghost">没有账号？用密码注册</button>
+
+      <div id="registerBox" class="register-box">
+        <div class="field">
+          <button type="button" id="regSendCodeBtn" class="send-btn">获取验证码</button>
+        </div>
+        <input id="regCodeInput" class="code-input" type="tel" inputmode="numeric" maxlength="6" placeholder="输入验证码" autocomplete="one-time-code">
+        <input id="regPwdInput" type="password" placeholder="设置密码（6 位以上）" autocomplete="new-password">
+        <p class="field-error" id="regError"></p>
+        <button type="button" id="registerBtn" class="btn-primary">注册并登录</button>
+      </div>
+    </form>
+
+    <div class="divider" data-page-node-id="JF1wzwZDyE2Hb3u4CBTt8A"><span data-page-node-id="jr5HABdNuCVCE7ZJ5D1ZVr">或</span></div>
+    <button id="wechatBtn" class="btn-wechat" data-page-node-id="t4gX4DWVcgplZGoTgv7nQk">微信登录</button>
+    <p class="login-error" id="loginError" data-page-node-id="lg2NIx5z9qUmpxcWKdryJG"></p>
+  </div>
+</div>
+
+<!-- 应用视图 -->
+<div id="appView" class="view" data-page-node-id="8aQrTwsa2pUMETovg2crqd">
+  <div class="app-wrap" data-page-node-id="rBs33aH8kxi95xLRCnEqVd">
+    <header class="app-header" data-page-node-id="EPbIuoaRxEccoqZBxOy2GT">
+      <div class="header-row" data-page-node-id="HbcsNhfbEQLANSVkE8dl4y">
+        <div data-page-node-id="3i0i8y9hsAkVLj3KKs0iKV">
+          <h1 data-page-node-id="i8upaPGjkNMBrKAWkZsQpy">学习清单</h1>
+          <p class="today-text" id="todayText" data-page-node-id="epD1nvFEahTbqSG9BHyiJb"></p>
+        </div>
+        <div class="user-box" data-page-node-id="kTEpNyrSiqRTRwoosejiDp">
+          <span class="user-name" id="userName" data-page-node-id="1kXQECkIsW988spU0Nxica"></span>
+          <button type="button" class="icon-btn" id="themeBtn" aria-label="切换深色模式" title="切换深色模式">🌙</button>
+          <span class="avatar" id="avatarText" data-page-node-id="j4974xeTtq1Y6BrJGlYH0V">我</span>
+        </div>
+      </div>
+      <div class="header-row second" data-page-node-id="bkAq6kKHN6MmHAdAB8of85">
+        <div class="view-tabs" data-page-node-id="2mMIMGwvdnlWC1fMLo0svM">
+          <button type="button" class="tab active" data-mode="day" data-page-node-id="ZQx0wvI9wEfrBwdwstGqBT">日</button>
+          <button type="button" class="tab" data-mode="week" data-page-node-id="81N8qSVt4xgAyI3idP445w">周</button>
+          <button type="button" class="tab" data-mode="month" data-page-node-id="V53GZeYkEvR1qLzy0Zfeb4">月</button>
+          <button type="button" class="tab" data-mode="stats" data-page-node-id="tabStats">统计</button>
+        </div>
+        <button id="logoutBtn" class="logout-btn" data-page-node-id="Z8rjFqoUKQ8h6E9TexstQa">退出登录</button>
+      </div>
+    </header>
+
+    <div class="nav-card" data-page-node-id="I6EVi850KBhZdzjDAUppey">
+      <button type="button" id="prevBtn" class="nav-arrow" aria-label="上一个" data-page-node-id="dgWkDEfXZxZAnzJ2nMwUXs">&lsaquo;</button>
+      <div class="nav-center" id="navCenter" data-page-node-id="w9cTvSx9RCtLId0HkarrdD"></div>
+      <button type="button" id="todayBtn" class="nav-today" data-page-node-id="8OUwAifeGj5Hzr2d5T8En9">今天</button>
+      <button type="button" id="nextBtn" class="nav-arrow" aria-label="下一个" data-page-node-id="cadWw0M4ilorXHxCqd5QFz">&rsaquo;</button>
+    </div>
+
+    <!-- 筛选栏 -->
+    <div class="filter-bar" id="filterBar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input id="searchInput" type="text" placeholder="搜索任务标题或备注…" autocomplete="off">
+      </div>
+      <div class="chip-line" id="subjectChips"></div>
+      <div class="filter-line">
+        <select id="sortSelect" aria-label="排序方式">
+          <option value="default">默认排序</option>
+          <option value="priority">重要优先</option>
+          <option value="due">按截止日期</option>
+          <option value="created">按创建时间</option>
+          <option value="title">按标题</option>
+        </select>
+        <label class="bulk-switch" id="bulkSwitchWrap">
+          <input type="checkbox" id="bulkToggle">
+          <span>批量</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- 批量操作条 -->
+    <div class="bulk-bar" id="bulkBar">
+      <span class="bulk-count" id="bulkCount">已选 0 项</span>
+      <div class="bulk-acts">
+        <button type="button" class="bulk-btn" id="bulkDoneBtn">标记完成</button>
+        <button type="button" class="bulk-btn" id="bulkDelBtn">删除</button>
+        <button type="button" class="bulk-btn" id="bulkCancelBtn">取消</button>
+      </div>
+    </div>
+
+    <div class="add-mask" id="addMask" data-page-node-id="addMask"></div>
+    <form id="addForm" class="add-card" novalidate data-page-node-id="idTBGpMwIGBwkegivoEGWM">
+      <div class="sheet-head" data-page-node-id="sheetHead">
+        <span class="sheet-title" data-page-node-id="sheetTitle">添加任务</span>
+        <button type="button" class="sheet-close" id="sheetClose" aria-label="关闭" data-page-node-id="sheetClose">×</button>
+      </div>
+      <div class="add-main" data-page-node-id="1KCYliUvejQ8pacwIVijp3">
+        <div class="input-row" data-page-node-id="pBUq4I3lkYCWLj7XozRhMK">
+          <input id="todoInput" type="text" maxlength="200" placeholder="想做点什么？" data-page-node-id="W9IoRXQnShL0OAg2DeaciM">
+        </div>
+        <div class="batch-box" id="batchBox" data-page-node-id="v0hTW03g0z81PcvcqUlNGB">
+          <textarea id="batchInput" placeholder="粘贴整段作业，例如：&#10;语:1.预习P54&#10;2、复习P55-58&#10;数:1.口算P20"></textarea>
+          <p class="batch-hint" data-page-node-id="qh8UMZyYLehDPbUuAQGK1d">支持「语/数/英」等科目前缀 + 编号（1. 2、3）自动拆分成多条，每条自动带科目标签。</p>
+          <div class="batch-preview" id="batchPreview" data-page-node-id="YAgK7YZJVlpq7fqIh7ZzF8"></div>
+        </div>
+        <div class="repeat-row" data-page-node-id="sdRX0GZV3M19o2x9RhCCof">
+          <span class="date-label" data-page-node-id="pog8XdD6fkYnRfMFehD9Ng">重复</span>
+          <div class="repeat-days" id="repeatDays" data-page-node-id="cg08ywirxH6TXnjYPXjm7j">
+            <button type="button" class="repeat-day" data-wd="1" data-page-node-id="fmROdR0LgB3CBzgKDQ6IHR">一</button>
+            <button type="button" class="repeat-day" data-wd="2" data-page-node-id="Sk0Il5RCDux9fvfZTEwyBN">二</button>
+            <button type="button" class="repeat-day" data-wd="3" data-page-node-id="CphFQQ5oDnh8TLTu2gGeCn">三</button>
+            <button type="button" class="repeat-day" data-wd="4" data-page-node-id="KLqZBhHKxhtywe0Xk4NFRy">四</button>
+            <button type="button" class="repeat-day" data-wd="5" data-page-node-id="HBoBtpkEzzlcJlrYR1BlOd">五</button>
+            <button type="button" class="repeat-day" data-wd="6" data-page-node-id="CoWhk2vMlcp5jO9kjZbNVr">六</button>
+            <button type="button" class="repeat-day" data-wd="7" data-page-node-id="d4k7w4VbVNuf2idOFozfBg">日</button>
+          </div>
+        </div>
+        <div class="opts-row" data-page-node-id="PBC95bhwIVJXDRnj6x4dlj">
+          <span class="date-label" data-page-node-id="cAVZGFBCL8BW5pPIAEyYTi">截止</span>
+          <input id="dueInput" type="date" data-page-node-id="YqycvXQUjb4EdrxGhwUgfl">
+          <label class="batch-toggle" data-page-node-id="1FfA0vqzAlELblp0tt7dDT">
+            <input type="checkbox" id="batchToggle">
+            <span>批量</span>
+          </label>
+          <button type="submit" class="add-btn" id="addBtn" data-page-node-id="32B4OpMSvkXA0xEKPGa7nw">添加</button>
+        </div>
+        <div class="opts-row">
+          <span class="date-label">科目</span>
+          <div class="subject-pick" id="addSubjectPick"></div>
+        </div>
+        <div class="opts-row add-extra">
+          <span class="date-label">更多</span>
+          <button type="button" class="link-btn" id="manageSubjectBtn">管理科目</button>
+          <label class="pri-toggle">
+            <input type="checkbox" id="addPriority">
+            <span>标为重要</span>
+          </label>
+        </div>
+      </div>
+    </form>
+
+    <div class="counter-row" data-page-node-id="H1y78bytQyprJEG48OvFJg">
+      <span class="remain-text" id="remainText" data-page-node-id="YtNuheERknXXi5EKXBA3ue">还剩 0 项待办</span>
+      <span id="doneText" data-page-node-id="YMiSiV1AK7xxJjddx8Wm4M">已完成 0 / 0</span>
+    </div>
+
+    <div id="dayPane" class="pane active" data-page-node-id="jbPeHYoBl5wdRON47Z1Wtl">
+      <ul id="todoList" data-page-node-id="PWYcIzeObz9NAHbvlGKjsR"></ul>
+      <div class="empty-state" id="emptyState" data-page-node-id="wotpEyomtlNaEYC0ztLdWf">
+        <span class="empty-icon" data-page-node-id="VdGZc3iKyhlC7uSKbqY6T9">☀️</span>
+        <span id="emptyText" data-page-node-id="BI72ErHAyRZCiFm6d9SZTR">今天还没有待办，添加一条吧</span>
+      </div>
+    </div>
+
+    <div id="weekPane" class="pane" data-page-node-id="MueMouciiyF6Am7eQtMOaO"></div>
+
+    <div id="monthPane" class="pane" data-page-node-id="MstzNCF3PrERFf7AbKOmEj">
+      <div class="month-card" data-page-node-id="REdtnhse99G9BodYoCR5WU">
+        <div class="month-weekdays" data-page-node-id="bP9w7vv2zWyJzn9DCkZDuK">
+          <span data-page-node-id="oJBY4NmhabZbGCCJAEVwaP">一</span><span data-page-node-id="uIfQLZzFpHzfwNvr8uoE3U">二</span><span data-page-node-id="w2r5LEUTIvR1qLzy0Zfeb4">三</span><span data-page-node-id="8hhyRjAuO25JV3gqGNagup">四</span><span data-page-node-id="YFJJBv9JHlzgQSVUtfegWTe">五</span><span data-page-node-id="F4Cb9oE6D4epKFguXuBSIp">六</span><span data-page-node-id="OMOS9OaPAWi4465HQqXbS0">日</span>
+        </div>
+        <div class="month-grid" id="monthGrid" data-page-node-id="RYiA5cRvr1TJaoYPVdBpls"></div>
+      </div>
+      <p class="month-hint" data-page-node-id="AOEYrFpDzoKYm7OlCCBzLh">点击日期可查看 / 添加当天的待办</p>
+    </div>
+
+    <div id="statsPane" class="pane">
+      <div class="stats-wrap" id="statsWrap"></div>
+    </div>
+  </div>
+
+  <button type="button" class="fab" id="fabBtn" aria-label="添加任务">+</button>
+</div>
+
+<!-- 详情 / 编辑弹窗 -->
+<div class="detail-mask" id="detailMask"></div>
+<div class="detail-card" id="detailCard">
+  <div class="d-head">
+    <span class="d-title">任务详情</span>
+    <button type="button" class="d-close" id="detailClose" aria-label="关闭">×</button>
+  </div>
+  <div class="d-field">
+    <label class="d-label" for="dTitleInput">标题</label>
+    <input id="dTitleInput" type="text" maxlength="200" class="d-title-input">
+  </div>
+  <div class="d-field">
+    <label class="d-label" for="dDueInput">截止日期</label>
+    <div class="d-row">
+      <input id="dDueInput" type="date">
+      <label class="pri-toggle"><input type="checkbox" id="dPriority"><span>重要</span></label>
+    </div>
+  </div>
+  <div class="d-field">
+    <span class="d-label">重复</span>
+    <div class="repeat-days" id="dRepeatDays">
+      <button type="button" class="repeat-day" data-wd="1">一</button>
+      <button type="button" class="repeat-day" data-wd="2">二</button>
+      <button type="button" class="repeat-day" data-wd="3">三</button>
+      <button type="button" class="repeat-day" data-wd="4">四</button>
+      <button type="button" class="repeat-day" data-wd="5">五</button>
+      <button type="button" class="repeat-day" data-wd="6">六</button>
+      <button type="button" class="repeat-day" data-wd="7">日</button>
+    </div>
+  </div>
+  <div class="d-field">
+    <span class="d-label">科目</span>
+    <div class="subject-pick" id="dSubjectPick"></div>
+  </div>
+  <div class="d-field">
+    <label class="d-label" for="dNotes">备注</label>
+    <textarea id="dNotes" class="d-notes" placeholder="补充说明、页码、页码范围…"></textarea>
+  </div>
+  <div class="d-actions">
+    <button type="button" class="d-btn danger" id="dDeleteBtn">删除</button>
+    <button type="button" class="d-btn ghost" id="dCancelBtn">取消</button>
+    <button type="button" class="d-btn primary" id="dSaveBtn">保存</button>
+  </div>
+</div>
+
+<!-- 科目管理弹窗 -->
+<div class="detail-mask" id="subjectMask"></div>
+<div class="detail-card" id="subjectCard">
+  <div class="d-head">
+    <span class="d-title">管理科目</span>
+    <button type="button" class="d-close" id="subjectClose" aria-label="关闭">×</button>
+  </div>
+  <div class="subject-list" id="subjectList"></div>
+  <div class="subject-form">
+    <input id="subjectNameInput" type="text" maxlength="12" placeholder="新科目名称，如「体育」">
+    <div class="color-line" id="subjectColorLine"></div>
+    <div class="d-actions">
+      <button type="button" class="d-btn ghost" id="subjectCancelBtn">关闭</button>
+      <button type="button" class="d-btn primary" id="subjectAddBtn">添加科目</button>
+    </div>
+  </div>
+  <p class="stat-note">内置科目（语文 / 数学 / 英语 / 科学 / 其他）始终可用；这里新增的科目会同步到所有设备。</p>
+</div>

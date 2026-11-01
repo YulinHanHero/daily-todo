@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>自测页 - 学习清单</title>
+<style>
+__STYLE__
+</style>
+</head>
+<body>
+__BODY__
+<script>__MOCK__</script>
+<script>
+window.__errors = []
+window.addEventListener('error', function (e) { window.__errors.push('ERR ' + String(e.message) + ' @ ' + (e.filename||'') + ':' + (e.lineno||'')) })
+window.addEventListener('unhandledrejection', function (e) { window.__errors.push('REJ ' + String(e.reason && e.reason.stack ? e.reason.stack : e.reason)) })
+</script>
+<script>
+__APP__
+</script>
+<script>
+/* ============ 断言脚本（async/await + try/catch 兜底） ============ */
+(function () {
+  var R = []
+  function assert(name, cond, detail) { R.push({ name: name, ok: !!cond, detail: detail || '' }) }
+  function q(id) { return document.getElementById(id) }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms) }) }
+  function findChip(text, root) {
+    return Array.prototype.filter.call((root || document).querySelectorAll('.chip, .pick-chip'), function (c) { return c.textContent === text })[0]
+  }
+  function fire(el, type) { el.dispatchEvent(new Event(type, { bubbles: true })) }
+
+  function flush() {
+    var out = document.createElement('pre')
+    out.id = 'TESTREPORT'
+    var pass = R.filter(function (x) { return x.ok }).length
+    out.textContent = '=== TEST REPORT ===\nPASS ' + pass + '/' + R.length + '\n' +
+      R.map(function (x) { return (x.ok ? '[PASS] ' : '[FAIL] ') + x.name + (x.detail ? '  (' + x.detail + ')' : '') }).join('\n') +
+      '\nJS_ERRORS: ' + (window.__errors.length ? window.__errors.join(' | ') : 'none')
+    document.body.appendChild(out)
+    document.title = 'REPORT:' + pass + '/' + R.length
+  }
+
+  async function run() {
+    await sleep(500)
+
+    /* --- 进入主界面 --- */
+    assert('进入主界面', q('appView').classList.contains('active'), 'appView.active=' + q('appView').classList.contains('active'))
+
+    /* --- 日视图渲染 --- */
+    var items = document.querySelectorAll('#todoList .todo-item')
+    assert('日视图渲染任务', items.length === 5, '渲染 ' + items.length + ' 条')
+
+    var subjTags = document.querySelectorAll('#todoList .subj-tag')
+    assert('科目标签渲染', subjTags.length >= 4, '标签 ' + subjTags.length + ' 个')
+    var musicTag = Array.prototype.some.call(subjTags, function (t) { return t.textContent === '音乐' })
+    assert('自定义科目「音乐」生效', musicTag, '自定义科目已渲染')
+
+    var stars = document.querySelectorAll('#todoList .star-btn')
+    assert('重要星标渲染', stars.length === 5, '星标 ' + stars.length + ' 个')
+    assert('重要任务高亮', document.querySelectorAll('#todoList .star-btn.on').length === 1, '标星 ' + document.querySelectorAll('#todoList .star-btn.on').length + ' 个')
+
+    var notesEl = document.querySelector('#todoList .todo-notes')
+    assert('备注展示', !!notesEl && notesEl.textContent.indexOf('限时 5 分钟') !== -1, notesEl ? notesEl.textContent : '无')
+
+    assert('筛选栏可见', q('filterBar').style.display !== 'none', 'display=' + q('filterBar').style.display)
+    var chips = document.querySelectorAll('#subjectChips .chip')
+    assert('科目筛选 chip', chips.length >= 2, 'chip ' + chips.length + ' 个')
+    assert('重复任务标记', document.querySelectorAll('#todoList .rep-tag').length >= 1, '重复标签 ' + document.querySelectorAll('#todoList .rep-tag').length + ' 个')
+    assert('计数文本', q('remainText').textContent.indexOf('还剩') !== -1, q('remainText').textContent)
+
+    /* --- 详情面板 --- */
+    items[0].click()
+    await sleep(120)
+    assert('详情面板打开', q('detailCard').classList.contains('show'), 'show=' + q('detailCard').classList.contains('show'))
+    assert('详情标题回填', q('dTitleInput').value === '预习语文 P54', 'value=' + q('dTitleInput').value)
+    assert('详情科目回填', !!q('dSubjectPick').querySelector('.pick-chip.active'), '科目已选中')
+    var dChips = q('dSubjectPick').querySelectorAll('.pick-chip')
+    assert('详情科目含自定义科目', Array.prototype.some.call(dChips, function (c) { return c.textContent === '音乐' }), '共 ' + dChips.length + ' 个')
+
+    /* --- 编辑保存 --- */
+    q('dTitleInput').value = '预习语文 P54（已改）'
+    q('dNotes').value = '改过的备注'
+    q('dPriority').checked = true
+    q('dSaveBtn').click()
+    await sleep(250)
+    var t0 = window.__mockStore.todos.filter(function (t) { return t.id === 1 })[0]
+    assert('保存写回数据库', t0 && t0.title === '预习语文 P54（已改）', t0 ? t0.title : '未找到')
+    assert('保存写回备注', t0 && t0.notes === '改过的备注', t0 ? t0.notes : '')
+    assert('保存写回优先级', t0 && t0.priority === true, 'priority=' + (t0 ? t0.priority : '?'))
+
+    /* --- 筛选 --- */
+    var yuwenChip = findChip('语文', q('subjectChips'))
+    if (yuwenChip) {
+      yuwenChip.click()
+      await sleep(80)
+      assert('按科目筛选生效', document.querySelectorAll('#todoList .todo-item').length === 1, '筛选后 ' + document.querySelectorAll('#todoList .todo-item').length + ' 条（语文仅 1 条）')
+      var allChip = findChip('全部', q('subjectChips'))
+      if (allChip) { allChip.click(); await sleep(80) }
+    } else {
+      assert('按科目筛选生效', false, '未找到语文 chip')
+    }
+
+    /* --- 搜索 --- */
+    q('searchInput').value = '口算'
+    fire(q('searchInput'), 'input')
+    await sleep(80)
+    assert('搜索生效', document.querySelectorAll('#todoList .todo-item').length === 1, '搜索后 ' + document.querySelectorAll('#todoList .todo-item').length + ' 条')
+    q('searchInput').value = ''
+    fire(q('searchInput'), 'input')
+    await sleep(80)
+
+    /* --- 排序 --- */
+    q('sortSelect').value = 'priority'
+    fire(q('sortSelect'), 'change')
+    await sleep(80)
+    var first = document.querySelector('#todoList .todo-item')
+    assert('重要优先排序', first && first.classList.contains('pri'), '首项=' + (first ? first.querySelector('.todo-title').textContent : '无'))
+    q('sortSelect').value = 'default'
+    fire(q('sortSelect'), 'change')
+    await sleep(80)
+
+    /* --- 批量模式 --- */
+    q('bulkToggle').checked = true
+    fire(q('bulkToggle'), 'change')
+    await sleep(80)
+    assert('批量模式开启', q('bulkBar').classList.contains('show'), 'bulkBar.show=' + q('bulkBar').classList.contains('show'))
+    document.querySelectorAll('#todoList .check')[0].click()
+    await sleep(80)
+    assert('批量选中计数', q('bulkCount').textContent === '已选 1 项', q('bulkCount').textContent)
+
+    /* --- 批量完成 --- */
+    q('bulkDoneBtn').click()
+    await sleep(250)
+    var done1 = window.__mockStore.todos.filter(function (t) { return t.id === 1 })[0]
+    assert('批量完成写回', done1 && done1.done === true, 'done=' + (done1 ? done1.done : '?'))
+
+    /* --- 统计视图 --- */
+    q('bulkCancelBtn').click()
+    await sleep(80)
+    var statsTab = document.querySelector('.view-tabs .tab[data-mode="stats"]')
+    assert('统计标签存在', !!statsTab, '')
+    statsTab.click()
+    await sleep(250)
+    assert('统计面板激活', q('statsPane').classList.contains('active'), '')
+    assert('统计指标渲染', document.querySelectorAll('#statsWrap .stat-num').length >= 3, '指标 ' + document.querySelectorAll('#statsWrap .stat-num').length + ' 个')
+    assert('科目分布渲染', document.querySelectorAll('#statsWrap .bar-row').length >= 3, '分布行 ' + document.querySelectorAll('#statsWrap .bar-row').length + ' 行')
+    assert('近 7 天趋势渲染', document.querySelectorAll('#statsWrap .spark-col').length === 7, '柱 ' + document.querySelectorAll('#statsWrap .spark-col').length + ' 根')
+
+    /* --- 深色模式 --- */
+    q('themeBtn').click()
+    await sleep(80)
+    assert('深色模式切换', document.body.classList.contains('dark'), 'dark=' + document.body.classList.contains('dark'))
+    var bg = getComputedStyle(document.body).backgroundColor
+    var bgVar = getComputedStyle(document.body).getPropertyValue('--bg').trim()
+    assert('深色背景生效', bgVar === '#101319', '--bg=' + bgVar + ' bodyBg=' + bg)
+    q('themeBtn').click()
+    await sleep(80)
+
+    /* --- 科目管理 --- */
+    q('manageSubjectBtn').click()
+    await sleep(120)
+    assert('科目管理打开', q('subjectCard').classList.contains('show'), '')
+    var sItems = document.querySelectorAll('#subjectList .subject-item')
+    assert('科目列表渲染', sItems.length === 6, '共 ' + sItems.length + ' 个（5 内置 + 1 自定义）')
+    q('subjectNameInput').value = '美术'
+    q('subjectAddBtn').click()
+    await sleep(300)
+    assert('新增自定义科目', window.__mockStore.subjects.length === 2, 'subjects=' + window.__mockStore.subjects.length)
+
+    /* --- 删除 + 撤销 --- */
+    q('subjectCancelBtn').click()
+    await sleep(80)
+    var dayTab = document.querySelector('.view-tabs .tab[data-mode="day"]')
+    dayTab.click()
+    await sleep(200)
+    var delBtn = document.querySelectorAll('#todoList .del-btn')[0]
+    assert('删除按钮存在', !!delBtn, '')
+    if (delBtn) {
+      delBtn.click()
+      await sleep(300)
+      assert('删除生效', window.__mockStore.todos.length === 4, '剩余 ' + window.__mockStore.todos.length + ' 条')
+      var undoBtn = document.getElementById('undoBtn')
+      assert('撤销按钮出现', !!undoBtn, '')
+      if (undoBtn) {
+        undoBtn.click()
+        await sleep(300)
+        assert('撤销恢复数据', window.__mockStore.todos.length === 5, '恢复后 ' + window.__mockStore.todos.length + ' 条')
+      }
+    }
+
+    assert('无 JS 运行时错误', window.__errors.length === 0, window.__errors.join(' | '))
+  }
+
+  run()
+    .catch(function (e) { assert('测试脚本异常', false, String(e && e.stack ? e.stack : e)) })
+    .then(flush)
+})()
+</script>
+</body>
+</html>
