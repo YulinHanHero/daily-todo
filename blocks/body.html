@@ -154,6 +154,10 @@
             <button type="button" class="repeat-day" data-wd="7" data-page-node-id="d4k7w4VbVNuf2idOFozfBg">日</button>
           </div>
         </div>
+        <div class="opts-row repeat-start-row" id="repeatStartRow">
+          <span class="date-label">起始</span>
+          <input id="startInput" type="date">
+        </div>
         <div class="opts-row" data-page-node-id="PBC95bhwIVJXDRnj6x4dlj">
           <span class="date-label" data-page-node-id="cAVZGFBCL8BW5pPIAEyYTi">截止</span>
           <input id="dueInput" type="date" data-page-node-id="YqycvXQUjb4EdrxGhwUgfl">
@@ -241,6 +245,12 @@
       <button type="button" class="repeat-day" data-wd="7">日</button>
     </div>
   </div>
+  <div class="d-field d-start-field" id="dStartField">
+    <label class="d-label" for="dStartInput">起始日期</label>
+    <div class="d-row">
+      <input id="dStartInput" type="date">
+    </div>
+  </div>
   <div class="d-field">
     <span class="d-label">科目</span>
     <div class="subject-pick" id="dSubjectPick"></div>
@@ -273,4 +283,15 @@
     </div>
   </div>
   <p class="stat-note">内置科目（语文 / 数学 / 英语 / 科学 / 其他）始终可用；这里新增的科目会同步到所有设备。</p>
+</div>
+
+<!-- 删除确认弹窗 -->
+<div class="detail-mask" id="confirmMask"></div>
+<div class="detail-card confirm-card" id="confirmCard">
+  <div class="confirm-title" id="confirmTitle">删除任务</div>
+  <p class="confirm-text" id="confirmText">确定要删除该任务吗？</p>
+  <div class="d-actions">
+    <button type="button" class="d-btn ghost" id="confirmCancelBtn">取消</button>
+    <button type="button" class="d-btn danger" id="confirmOkBtn">删除</button>
+  </div>
 </div>

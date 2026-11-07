@@ -227,6 +227,8 @@
   .opts-row { display: flex; align-items: center; gap: 10px; }
   .opts-row input[type="date"] { height: 36px; font-size: 14px; flex: 1; min-width: 0; }
   .date-label { font-size: 12px; color: var(--muted); flex: none; }
+  .repeat-start-row { display: none; }
+  .repeat-start-row.show { display: flex; }
   .repeat-row { display: flex; align-items: center; gap: 8px; }
   .repeat-days { display: flex; flex: 1; min-width: 0; gap: 4px; }
   .repeat-day {
@@ -462,6 +464,8 @@
     border-radius: 50%; font-size: 18px; line-height: 1; cursor: pointer;
   }
   .d-field { margin-bottom: 12px; }
+  .d-start-field { display: none; }
+  .d-start-field.show { display: block; }
   .d-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block; }
   .d-title-input { font-size: 16px !important; font-weight: 600; }
   .d-row { display: flex; gap: 8px; align-items: center; }
@@ -489,6 +493,12 @@
   .d-btn.primary { background: var(--primary); color: var(--on-primary); }
   .d-btn.danger { background: var(--danger-soft); color: var(--danger); }
   .d-btn:disabled { opacity: .5; cursor: default; }
+
+  /* ---------- 删除确认弹窗 ---------- */
+  .confirm-card { z-index: 302; }
+  .confirm-title { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .confirm-text { font-size: 14px; color: var(--text-2); line-height: 1.6; margin: 0 0 4px; word-break: break-all; }
+  .confirm-card .d-actions { margin-top: 18px; }
 
   /* ---------- 科目管理 ---------- */
   .subject-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }

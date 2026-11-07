@@ -27,6 +27,7 @@ var pwdPhoneError = $('pwdPhoneError'), pwdError = $('pwdError')
 var toRegisterBtn = $('toRegisterBtn'), registerBox = $('registerBox')
 var regSendCodeBtn = $('regSendCodeBtn'), regCodeInput = $('regCodeInput'), regPwdInput = $('regPwdInput'), regError = $('regError'), registerBtn = $('registerBtn')
 var todoInput = $('todoInput'), dueInput = $('dueInput'), todoList = $('todoList')
+var startInput = $('startInput'), repeatStartRow = $('repeatStartRow')
 var batchToggle = $('batchToggle'), batchBox = $('batchBox'), batchInput = $('batchInput'), batchPreview = $('batchPreview'), addBtn = $('addBtn')
 var repeatDaysBox = $('repeatDays')
 var addMask = $('addMask'), fabBtn = $('fabBtn'), sheetClose = $('sheetClose')
@@ -43,11 +44,14 @@ var bulkToggle = $('bulkToggle'), bulkSwitchWrap = $('bulkSwitchWrap'), bulkBar 
 var addSubjectPick = $('addSubjectPick'), addPriority = $('addPriority'), manageSubjectBtn = $('manageSubjectBtn')
 var detailMask = $('detailMask'), detailCard = $('detailCard'), detailClose = $('detailClose')
 var dTitleInput = $('dTitleInput'), dDueInput = $('dDueInput'), dPriority = $('dPriority')
+var dStartInput = $('dStartInput'), dStartField = $('dStartField')
 var dRepeatDays = $('dRepeatDays'), dSubjectPick = $('dSubjectPick'), dNotes = $('dNotes')
 var dSaveBtn = $('dSaveBtn'), dDeleteBtn = $('dDeleteBtn'), dCancelBtn = $('dCancelBtn')
 var subjectMask = $('subjectMask'), subjectCard = $('subjectCard'), subjectClose = $('subjectClose')
 var subjectList = $('subjectList'), subjectNameInput = $('subjectNameInput'), subjectColorLine = $('subjectColorLine')
 var subjectAddBtn = $('subjectAddBtn'), subjectCancelBtn = $('subjectCancelBtn')
+var confirmMask = $('confirmMask'), confirmCard = $('confirmCard'), confirmTitle = $('confirmTitle'), confirmText = $('confirmText')
+var confirmCancelBtn = $('confirmCancelBtn'), confirmOkBtn = $('confirmOkBtn')
 
 var WEEK_CN = ['日', '一', '二', '三', '四', '五', '六']
 var WEEK_MON = ['一', '二', '三', '四', '五', '六', '日']
@@ -184,7 +188,7 @@ function showLoginView() {
   batchMode = false; updateBatchUI()
   viewMode = 'day'; cursor = startOfDay(new Date())
   updateTabs()
-  closeAddSheet(); closeDetail(); closeSubjectManager()
+  closeAddSheet(); closeDetail(); closeSubjectManager(); closeConfirm()
   appView.classList.remove('active')
   authView.classList.add('active')
   render()
@@ -545,6 +549,18 @@ function goToDay(date) {
 
 function syncDueInput() {
   dueInput.value = fmtDate(cursor)
+  if (!startInput.value) startInput.value = fmtDate(startOfDay(new Date()))
+}
+
+/* 根据是否勾选了重复，控制「起始」字段的显示 */
+function updateRepeatStartUI() {
+  var hasRepeat = Object.keys(selectedRepeat).length > 0
+  repeatStartRow.classList.toggle('show', hasRepeat)
+  if (hasRepeat && !startInput.value) startInput.value = fmtDate(startOfDay(new Date()))
+}
+function updateDetailStartUI() {
+  var hasRepeat = Object.keys(editingRepeat).length > 0
+  dStartField.classList.toggle('show', hasRepeat)
 }
 
 /* ================= 科目数据 ================= */
@@ -750,7 +766,7 @@ async function addSingleTodo() {
   if (addPriority.checked) payload.priority = true
   if (repArr.length > 0) {
     payload.repeat_days = repArr
-    payload.due_date = fmtDate(cursor)
+    payload.due_date = startInput.value || fmtDate(startOfDay(new Date()))
     if (dueInput.value) payload.repeat_end = due
   }
   var res = await cloud.database.from('todos').insert(payload).select()
@@ -895,7 +911,7 @@ async function addBatchTodos() {
     if (addPriority.checked) payload.priority = true
     if (repArr.length > 0) {
       payload.repeat_days = repArr
-      payload.due_date = fmtDate(cursor)
+      payload.due_date = startInput.value || fmtDate(startOfDay(new Date()))
       if (dueInput.value) payload.repeat_end = due
     }
     var res = await cloud.database.from('todos').insert(payload).select()
@@ -917,6 +933,8 @@ async function addBatchTodos() {
 function openAddSheet() {
   addMask.classList.add('show')
   addForm.classList.add('show')
+  if (!startInput.value) startInput.value = fmtDate(startOfDay(new Date()))
+  updateRepeatStartUI()
   todoInput.focus()
 }
 function closeAddSheet() {
@@ -956,6 +974,7 @@ repeatDaysBox.addEventListener('click', function (e) {
     selectedRepeat[wd] = true
     btn.classList.add('active')
   }
+  updateRepeatStartUI()
 })
 
 dRepeatDays.addEventListener('click', function (e) {
@@ -969,12 +988,15 @@ dRepeatDays.addEventListener('click', function (e) {
     editingRepeat[wd] = true
     btn.classList.add('active')
   }
+  updateDetailStartUI()
 })
 
 function clearRepeat() {
   selectedRepeat = {}
   var btns = repeatDaysBox.querySelectorAll('.repeat-day')
   btns.forEach(function (b) { b.classList.remove('active') })
+  startInput.value = ''
+  updateRepeatStartUI()
 }
 
 /* ================= 科目选择器渲染 ================= */
@@ -1114,19 +1136,27 @@ function openDetail(id) {
   if (!t) return
   editingId = t.id
   dTitleInput.value = t.title || ''
-  dDueInput.value = String(t.due_date || '').slice(0, 10)
   dPriority.checked = !!t.priority
   dNotes.value = t.notes || ''
   editingRepeat = {}
   var rp = Array.isArray(t.repeat_days) ? t.repeat_days : []
+  var isRepeat = rp.length > 0
   var btns = dRepeatDays.querySelectorAll('.repeat-day')
   btns.forEach(function (b) {
     var on = rp.indexOf(Number(b.getAttribute('data-wd'))) !== -1
     b.classList.toggle('active', on)
     if (on) editingRepeat[b.getAttribute('data-wd')] = true
   })
+  /* 重复任务：起始=due_date，截止=repeat_end；非重复：截止=due_date */
+  dStartInput.value = String(t.due_date || '').slice(0, 10)
+  if (isRepeat) {
+    dDueInput.value = String(t.repeat_end || '').slice(0, 10)
+  } else {
+    dDueInput.value = String(t.due_date || '').slice(0, 10)
+  }
   editingSubjectKey = t.subject || null
   renderSubjectPickers()
+  updateDetailStartUI()
   detailMask.classList.add('show')
   detailCard.classList.add('show')
   setTimeout(function () { dTitleInput.focus() }, 60)
@@ -1145,16 +1175,17 @@ dSaveBtn.addEventListener('click', async function () {
   var repArr = Object.keys(editingRepeat).map(Number).sort(function (a, b) { return a - b })
   var payload = {
     title: title,
-    due_date: dDueInput.value || fmtDate(cursor),
     priority: dPriority.checked,
     notes: dNotes.value.trim()
   }
   if (repArr.length > 0) {
     payload.repeat_days = repArr
+    payload.due_date = dStartInput.value || fmtDate(startOfDay(new Date()))
     if (dDueInput.value) payload.repeat_end = dDueInput.value
   } else {
     payload.repeat_days = null
     payload.repeat_end = null
+    payload.due_date = dDueInput.value || fmtDate(cursor)
   }
   if (editingSubjectKey) payload.subject = editingSubjectKey
   else payload.subject = null
@@ -1187,7 +1218,7 @@ dDeleteBtn.addEventListener('click', async function () {
   var id = editingId
   var rec = findTodoById(id)
   closeDetail()
-  await deleteTodo(id, rec)
+  requestDelete(id, rec)
 })
 
 /* ================= 完成 / 删除 ================= */
@@ -1237,6 +1268,81 @@ async function deleteTodo(id, record) {
   expandRange()
   render()
   showUndo(gone)
+}
+
+/* ---------- 删除确认（重复任务需先确认） ---------- */
+var pendingDeleteId = null
+var pendingDeleteRecord = null
+
+function isRepeatTask(record) {
+  return record && Array.isArray(record.repeat_days) && record.repeat_days.length > 0
+}
+
+/* 统计某重复任务的重复天数（有截止日则精确统计；无限重复则返回 -1 表示"持续重复"） */
+function repeatInstanceCount(record) {
+  var rp = record.repeat_days
+  if (!Array.isArray(rp) || rp.length === 0) return 0
+  var startKey = String(record.due_date || '').slice(0, 10)
+  var endKey = String(record.repeat_end || '').slice(0, 10)
+  var begin = parseDate(startKey)
+  if (!begin) return 0
+  if (!endKey) return -1   /* 无限重复 */
+  var end = parseDate(endKey)
+  var count = 0
+  for (var d = startOfDay(begin); d <= end; d = addDays(d, 1)) {
+    var iso = jsDowToIso(d.getDay())
+    if (rp.indexOf(iso) !== -1) count++
+  }
+  return count
+}
+
+/* 把重复星期数字 [2,4,6] 转成中文「周二、周四、周六」 */
+function repeatDaysText(rp) {
+  var names = ['', '周一', '周二', '周三', '周四', '周五', '周六', '周日']
+  return rp.map(function (w) { return names[w] || '' }).filter(Boolean).join('、')
+}
+
+function openConfirm(id, record) {
+  pendingDeleteId = id
+  pendingDeleteRecord = record
+  var isRep = isRepeatTask(record)
+  if (isRep) {
+    var cnt = repeatInstanceCount(record)
+    var dayText = repeatDaysText(record.repeat_days)
+    var scopeText = cnt < 0
+      ? '（' + dayText + '，持续重复）'
+      : '（' + dayText + '，共 ' + cnt + ' 天）'
+    confirmTitle.textContent = '删除重复任务'
+    confirmText.textContent = '这是一个重复任务' + scopeText + '，删除后将同时移除所有日期的这条任务，无法只删除其中某一天。确定要删除吗？'
+  } else {
+    confirmTitle.textContent = '删除任务'
+    confirmText.textContent = '确定要删除「' + (record && record.title ? record.title : '该任务') + '」吗？'
+  }
+  confirmMask.classList.add('show')
+  confirmCard.classList.add('show')
+}
+
+function closeConfirm() {
+  pendingDeleteId = null
+  pendingDeleteRecord = null
+  confirmMask.classList.remove('show')
+  confirmCard.classList.remove('show')
+}
+
+confirmCancelBtn.addEventListener('click', closeConfirm)
+confirmMask.addEventListener('click', closeConfirm)
+confirmOkBtn.addEventListener('click', async function () {
+  var id = pendingDeleteId
+  var record = pendingDeleteRecord
+  closeConfirm()
+  if (id === null) return
+  await deleteTodo(id, record)
+})
+
+/* 删除入口：重复任务先弹确认，非重复任务也统一走确认（避免误删） */
+function requestDelete(id, record) {
+  if (!record) record = findTodoById(id)
+  openConfirm(id, record)
 }
 
 /* ---------- 撤销删除 ---------- */
@@ -1438,7 +1544,7 @@ function makeDel(item) {
   del.addEventListener('click', function (e) {
     e.stopPropagation()
     var rec = findTodoById(item.id)
-    deleteTodo(item.id, rec)
+    requestDelete(item.id, rec)
   })
   return del
 }
