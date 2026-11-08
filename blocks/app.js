@@ -1591,7 +1591,12 @@ async function toggleTodo(id) {
     if (String(allTodos[i].id) === String(id)) { allTodos[i].done = next; break }
   }
   expandRange()
-  render()
+  if (next) {
+    /* 完成：先播放打勾 + 淡出动画（停留原位），稍后再平滑下沉重排 */
+    animateCompleteThenSettle(id)
+  } else {
+    render()
+  }
   if (next) {
     /* 标记完成：激励反馈 + 撤销缓冲 */
     playDoneSound()
@@ -1601,6 +1606,63 @@ async function toggleTodo(id) {
   } else {
     hideDoneUndo()
   }
+}
+
+/* 完成任务：先打勾淡出（原位），再用 FLIP 平滑下沉到已完成分组 */
+var completeSettleTimer = null
+function animateCompleteThenSettle(id) {
+  clearTimeout(completeSettleTimer)
+  var container = viewMode === 'day' ? todoList : (viewMode === 'week' ? weekPane : monthPane)
+  /* 1. 在旧 DOM 上标记视觉完成（打勾 + 淡出），但不重排 */
+  var li = container && container.querySelector('[data-id="' + CSS_escape(id) + '"]')
+  if (li) li.classList.add('done', 'completing')
+  /* 2. 稍后执行 FLIP 重排 */
+  completeSettleTimer = setTimeout(function () {
+    flipSettle(container)
+  }, 300)
+}
+
+/* FLIP：记录旧位置 → 重建 → 从旧位置平滑滑动到新位置 */
+function flipSettle(container) {
+  var old = []
+  var items = container.querySelectorAll('.todo-item, .w-item')
+  items.forEach(function (el) {
+    old.push({ el: el, id: el.getAttribute('data-id'), rect: el.getBoundingClientRect() })
+  })
+  render()
+  var moved = []
+  items = container.querySelectorAll('.todo-item, .w-item')
+  items.forEach(function (el) {
+    var id = el.getAttribute('data-id')
+    var o = null
+    for (var i = 0; i < old.length; i++) { if (old[i].id === id) { o = old[i]; break } }
+    if (!o) return
+    var nr = el.getBoundingClientRect()
+    var dy = o.rect.top - nr.top
+    if (Math.abs(dy) > 1) {
+      moved.push({ el: el, dy: dy })
+    }
+  })
+  /* 应用过渡：先瞬移到旧位置，再滑动到新位置 */
+  moved.forEach(function (m) {
+    m.el.style.transition = 'none'
+    m.el.style.transform = 'translateY(' + m.dy + 'px)'
+  })
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      moved.forEach(function (m) {
+        m.el.style.transition = 'transform .45s cubic-bezier(.4, 0, .2, 1), opacity .45s ease'
+        m.el.style.transform = 'translateY(0)'
+      })
+      setTimeout(function () {
+        moved.forEach(function (m) {
+          m.el.style.transition = ''
+          m.el.style.transform = ''
+          m.el.classList.remove('completing')
+        })
+      }, 500)
+    })
+  })
 }
 
 /* 完成任务撤销条（复用删除撤销的视觉，但针对"完成"） */
@@ -2019,6 +2081,7 @@ function renderDay() {
     }
     var li = document.createElement('li')
     li.className = 'todo-item' + (t.done ? ' done' : '') + (t.priority ? ' pri' : '') + (bulkMode && selectedIds[String(t.id)] ? ' sel' : '')
+    li.setAttribute('data-id', String(t.id))
     var title = document.createElement('span')
     title.className = 'todo-title'
     title.textContent = t.title
@@ -2112,6 +2175,7 @@ function renderWeek() {
         items.forEach(function (t) {
           var it = document.createElement('div')
           it.className = 'w-item' + (t.done ? ' done' : '') + (t.priority ? ' pri' : '')
+          it.setAttribute('data-id', String(t.id))
           var title = document.createElement('span')
           title.className = 'w-title'
           title.textContent = t.title

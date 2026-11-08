@@ -399,6 +399,15 @@
   .todo-item.done .todo-notes { opacity: .6; }
   .w-item.done { opacity: .55; }
   .w-item.done .subj-tag { opacity: .5; filter: grayscale(60%); }
+  /* 完成瞬间：淡出 + 轻微缩放，营造"完成"手感；后续由 JS FLIP 平滑下沉 */
+  .todo-item, .w-item { will-change: transform; }
+  .todo-item.completing, .w-item.completing {
+    transition: opacity .3s ease, transform .3s ease;
+  }
+  .todo-item.completing .todo-title,
+  .w-item.completing .w-title {
+    transition: color .3s ease;
+  }
   /* 整行可点击的反馈 */
   .todo-item { cursor: pointer; }
   .todo-item:active { background: var(--surface-2); }
