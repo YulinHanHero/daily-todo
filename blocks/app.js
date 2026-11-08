@@ -1614,7 +1614,11 @@ function animateCompleteThenSettle(id) {
   clearTimeout(completeSettleTimer)
   var container = viewMode === 'day' ? todoList : (viewMode === 'week' ? weekPane : monthPane)
   /* 1. 在旧 DOM 上标记视觉完成（打勾 + 淡出），但不重排 */
-  var li = container && container.querySelector('[data-id="' + CSS_escape(id) + '"]')
+  var li = null
+  var nodes = container ? container.querySelectorAll('[data-id]') : []
+  for (var i = 0; i < nodes.length; i++) {
+    if (nodes[i].getAttribute('data-id') === String(id)) { li = nodes[i]; break }
+  }
   if (li) li.classList.add('done', 'completing')
   /* 2. 稍后执行 FLIP 重排 */
   completeSettleTimer = setTimeout(function () {
