@@ -385,9 +385,24 @@
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     color: #fff; font-size: 13px; background: var(--surface); transition: all .15s; font-style: normal;
   }
-  .todo-item.done .check, .w-item.done .check { background: var(--primary); border-color: var(--primary); }
+  .todo-item.done .check, .w-item.done .check { background: var(--primary); border-color: var(--primary); animation: check-pop .35s ease-out; }
+  @keyframes check-pop {
+    0% { transform: scale(.6); }
+    55% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+  }
   .todo-title { flex: 1; min-width: 0; word-break: break-all; font-size: 15.5px; cursor: pointer; }
   .todo-item.done .todo-title { color: var(--muted-2); text-decoration: line-through; }
+  /* 完成项整体弱化：整行淡出 + 科目标签一起变灰 */
+  .todo-item.done { opacity: .55; }
+  .todo-item.done .subj-tag { opacity: .5; filter: grayscale(60%); }
+  .todo-item.done .todo-notes { opacity: .6; }
+  .w-item.done { opacity: .55; }
+  .w-item.done .subj-tag { opacity: .5; filter: grayscale(60%); }
+  /* 整行可点击的反馈 */
+  .todo-item { cursor: pointer; }
+  .todo-item:active { background: var(--surface-2); }
+  .w-item { cursor: pointer; }
   .star-btn {
     flex: none; border: none; background: none; font-size: 17px; line-height: 1;
     cursor: pointer; color: var(--muted-3); padding: 0 2px;
@@ -418,6 +433,7 @@
   .week-day-title .today-badge { font-size: 10px; padding: 1px 7px; }
   .week-day-count { font-size: 12px; color: var(--muted); }
   .week-day-count .pending { color: var(--primary); font-weight: 600; }
+  .week-day-count .week-celebrate { color: var(--success); font-weight: 600; }
   .week-items { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
   .w-item { display: flex; align-items: center; gap: 10px; }
   .w-item .check { width: 20px; height: 20px; font-size: 11px; }
@@ -562,6 +578,19 @@
   .settings-menu-name { font-size: 15px; font-weight: 600; color: var(--text); }
   .settings-menu-desc { font-size: 12px; color: var(--muted); margin-top: 3px; word-break: break-all; }
   .settings-menu-arrow { flex: none; font-size: 22px; color: var(--muted-2); line-height: 1; }
+  /* 开关 */
+  .switch {
+    flex: none; width: 46px; height: 26px; border: none; border-radius: 999px;
+    background: var(--surface-3); position: relative; cursor: pointer; padding: 0;
+    transition: background .2s;
+  }
+  .switch .switch-knob {
+    position: absolute; top: 2px; left: 2px; width: 22px; height: 22px;
+    border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    transition: left .2s;
+  }
+  .switch.on { background: var(--primary); }
+  .switch.on .switch-knob { left: 22px; }
   /* 子功能弹窗 */
   .sub-mask { z-index: 303; }
   .sub-card { z-index: 304; }

@@ -60,6 +60,7 @@ var settingsBtn = $('settingsBtn')
 var settingsMask = $('settingsMask'), settingsCard = $('settingsCard'), settingsClose = $('settingsClose')
 var settingsAvatar = $('settingsAvatar'), settingsName = $('settingsName'), settingsPhone = $('settingsPhone')
 var menuNameBtn = $('menuNameBtn'), menuNameDesc = $('menuNameDesc'), menuPwdBtn = $('menuPwdBtn')
+var soundToggle = $('soundToggle')
 var nameMask = $('nameMask'), nameCard = $('nameCard'), nameBackBtn = $('nameBackBtn'), nameClose = $('nameClose')
 var settingsNameInput = $('settingsNameInput'), settingsSaveNameBtn = $('settingsSaveNameBtn'), settingsNameError = $('settingsNameError')
 var pwdMask = $('pwdMask'), pwdCard = $('pwdCard'), pwdBackBtn = $('pwdBackBtn'), pwdClose = $('pwdClose')
@@ -107,6 +108,11 @@ var editingSubjectKey = null
 var undoRecord = null        /* 待撤销的删除记录 */
 var undoTimer = null
 var undoBar = null
+var doneUndoBar = null       /* 完成任务撤销条 */
+var doneUndoTimer = null
+var doneUndoId = null        /* 待撤销完成的任务 id */
+var soundOn = false          /* 完成音效开关（默认关闭） */
+var SOUND_KEY = 'todo_sound'
 
 /* ================= 日期工具 ================= */
 function startOfDay(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()) }
@@ -631,12 +637,25 @@ function closeSettings() {
 function openSettings() {
   closeAddSheet(); closeDetail(); closeSubjectManager(); closeConfirm(); closeSettings(); closeSubPanels()
   renderSettingsAccount()
+  syncSoundToggle()
   settingsMask.classList.add('show')
   settingsCard.classList.add('show')
 }
 settingsBtn.addEventListener('click', openSettings)
 settingsClose.addEventListener('click', closeSettings)
 settingsMask.addEventListener('click', closeSettings)
+
+/* 完成音效开关 */
+function syncSoundToggle() {
+  soundToggle.classList.toggle('on', soundOn)
+  soundToggle.setAttribute('aria-checked', soundOn ? 'true' : 'false')
+}
+soundToggle.addEventListener('click', function () {
+  soundOn = !soundOn
+  syncSoundToggle()
+  try { localStorage.setItem(SOUND_KEY, soundOn ? 'on' : 'off') } catch (e) {}
+  if (soundOn) playDoneSound()
+})
 
 /* 关闭所有子功能弹窗 */
 function closeSubPanels() {
@@ -1525,6 +1544,39 @@ function findTodo(id) {
   return null
 }
 
+/* 完成鼓励语（随机） */
+var PRAISES = ['太棒了！🎉', '完成一项！✅', '真厉害！👍', '继续加油！💪', '做得真好！🌟', '又完成啦！🎊']
+function randomPraise() {
+  return PRAISES[Math.floor(Math.random() * PRAISES.length)]
+}
+
+/* 完成音效（Web Audio 轻快"叮"声，无需音频文件） */
+function playDoneSound() {
+  if (!soundOn) return
+  try {
+    var ctx = window.__todoAudioCtx
+    if (!ctx) {
+      var AC = window.AudioContext || window.webkitAudioContext
+      if (!AC) return
+      ctx = new AC()
+      window.__todoAudioCtx = ctx
+    }
+    if (ctx.state === 'suspended') ctx.resume()
+    var now = ctx.currentTime
+    var osc = ctx.createOscillator()
+    var gain = ctx.createGain()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(880, now)
+    osc.frequency.exponentialRampToValueAtTime(1318.5, now + 0.08)
+    gain.gain.setValueAtTime(0.18, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25)
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.start(now)
+    osc.stop(now + 0.26)
+  } catch (e) {}
+}
+
 async function toggleTodo(id) {
   var item = findTodo(id)
   if (!item) return
@@ -1538,6 +1590,66 @@ async function toggleTodo(id) {
   }
   expandRange()
   render()
+  if (next) {
+    /* 标记完成：激励反馈 + 撤销缓冲 */
+    playDoneSound()
+    showToast(randomPraise())
+    showDoneUndo(id)
+    celebrateIfDayAllDone(item)
+  } else {
+    hideDoneUndo()
+  }
+}
+
+/* 完成任务撤销条（复用删除撤销的视觉，但针对"完成"） */
+function showDoneUndo(id) {
+  doneUndoId = id
+  clearTimeout(doneUndoTimer)
+  if (!doneUndoBar) {
+    doneUndoBar = document.createElement('div')
+    doneUndoBar.className = 'bulk-bar show'
+    doneUndoBar.style.position = 'fixed'
+    doneUndoBar.style.left = '16px'
+    doneUndoBar.style.right = '16px'
+    doneUndoBar.style.bottom = 'calc(92px + env(safe-area-inset-bottom))'
+    doneUndoBar.style.margin = '0'
+    doneUndoBar.style.zIndex = '160'
+    doneUndoBar.innerHTML = '<span class="bulk-count">已标记完成</span><div class="bulk-acts"><button type="button" class="bulk-btn" id="doneUndoBtn">撤销</button></div>'
+    document.body.appendChild(doneUndoBar)
+    doneUndoBar.querySelector('#doneUndoBtn').addEventListener('click', undoDone)
+  }
+  doneUndoBar.classList.add('show')
+  doneUndoTimer = setTimeout(hideDoneUndo, 5000)
+}
+function hideDoneUndo() {
+  if (doneUndoBar) doneUndoBar.classList.remove('show')
+  doneUndoId = null
+}
+async function undoDone() {
+  var id = doneUndoId
+  hideDoneUndo()
+  if (!id) return
+  var res = await cloud.database.from('todos').update({ done: false }).eq('id', numId(id)).select()
+  if (res.error) { showToast(friendlyError(res.error)); return }
+  for (var i = 0; i < allTodos.length; i++) {
+    if (String(allTodos[i].id) === String(id)) { allTodos[i].done = false; break }
+  }
+  expandRange()
+  render()
+}
+
+/* 某天任务全部完成时庆祝 */
+function celebrateIfDayAllDone(item) {
+  if (!item) return
+  var key = String(item.due_date || '').slice(0, 10)
+  if (!key) return
+  var items = allTodos.filter(function (t) { return String(t.due_date || '').slice(0, 10) === key })
+  if (items.length > 1 && items.every(function (t) { return t.done })) {
+    var todayKey = fmtDate(startOfDay(new Date()))
+    if (key === todayKey) showToast('今天的任务全部完成啦！🎉🏆')
+    else showToast('这一天的任务全部完成啦！🎉')
+    playDoneSound()
+  }
 }
 
 async function togglePriority(id) {
@@ -1873,7 +1985,16 @@ function makeStar(item) {
 }
 
 function bindRowTap(el, item) {
+  /* 整行点击 → 切换完成（对儿童更友好，点击热区大） */
   el.addEventListener('click', function () {
+    if (bulkMode) { toggleSelect(item.id); return }
+    toggleTodo(item.id)
+  })
+}
+/* 标题文字点击 → 打开详情（保留编辑/备注入口） */
+function bindTitleTap(titleEl, item) {
+  titleEl.addEventListener('click', function (e) {
+    e.stopPropagation()
     if (bulkMode) { toggleSelect(item.id); return }
     openDetail(item.id)
   })
@@ -1892,6 +2013,7 @@ function renderDay() {
     var subjTag = makeSubjectTag(t)
     if (subjTag) li.appendChild(subjTag)
     li.appendChild(title)
+    bindTitleTap(title, t)
     if (t.isRepeat) li.appendChild(makeRepTag(t))
     li.appendChild(makeStar(t))
     li.appendChild(makeDel(t))
@@ -1946,13 +2068,21 @@ function renderWeek() {
       }
       var cnt = document.createElement('div')
       cnt.className = 'week-day-count'
-      var pendEl = document.createElement('span')
-      pendEl.className = 'pending'
-      pendEl.textContent = pending + ' 项待办'
-      cnt.appendChild(pendEl)
-      var sep = document.createElement('span')
-      sep.textContent = ' · 已完成 ' + (items.length - pending) + '/' + items.length
-      cnt.appendChild(sep)
+      var allDone = items.length > 0 && pending === 0
+      if (allDone) {
+        var cele = document.createElement('span')
+        cele.className = 'week-celebrate'
+        cele.textContent = '🎉 全部完成'
+        cnt.appendChild(cele)
+      } else {
+        var pendEl = document.createElement('span')
+        pendEl.className = 'pending'
+        pendEl.textContent = pending + ' 项待办'
+        cnt.appendChild(pendEl)
+        var sep = document.createElement('span')
+        sep.textContent = ' · 已完成 ' + (items.length - pending) + '/' + items.length
+        cnt.appendChild(sep)
+      }
       header.appendChild(ht)
       header.appendChild(cnt)
       header.addEventListener('click', function () { goToDay(d) })
@@ -1976,6 +2106,7 @@ function renderWeek() {
           var st = makeSubjectTag(t)
           if (st) it.appendChild(st)
           it.appendChild(title)
+          bindTitleTap(title, t)
           if (t.isRepeat) it.appendChild(makeRepTag(t))
           it.appendChild(makeStar(t))
           it.appendChild(makeDel(t))
@@ -2222,6 +2353,7 @@ function renderCounter() {
   try { dark = localStorage.getItem(THEME_KEY) === 'dark' } catch (e) {}
   document.body.classList.toggle('dark', dark)
   themeBtn.textContent = dark ? '☀️' : '🌙'
+  try { soundOn = localStorage.getItem(SOUND_KEY) === 'on' } catch (e) {}
 
   /* 密码可见性切换：点击小眼睛切换明文/密文 */
   var eyeBtns = document.querySelectorAll('.pwd-eye')
