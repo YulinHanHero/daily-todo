@@ -1005,6 +1005,8 @@ function applyFilter(list) {
     return true
   })
   out.sort(function (a, b) {
+    /* 未完成永远排在已完成之前（已完成任务自动沉到下方，形成分组） */
+    if (a.done !== b.done) return a.done ? 1 : -1
     if (sortMode === 'priority') {
       if (a.priority !== b.priority) return a.priority ? -1 : 1
     }
@@ -2003,7 +2005,18 @@ function bindTitleTap(titleEl, item) {
 function renderDay() {
   todoList.innerHTML = ''
   var list = applyFilter(rangeTodos)
+  var hasPending = false
+  var insertedDivider = false
   list.forEach(function (t) {
+    if (!t.done) hasPending = true
+    /* 在第一个已完成项之前插入分组标题（仅当此前已有未完成项） */
+    if (t.done && hasPending && !insertedDivider) {
+      var divider = document.createElement('li')
+      divider.className = 'done-group-divider'
+      divider.textContent = '已完成'
+      todoList.appendChild(divider)
+      insertedDivider = true
+    }
     var li = document.createElement('li')
     li.className = 'todo-item' + (t.done ? ' done' : '') + (t.priority ? ' pri' : '') + (bulkMode && selectedIds[String(t.id)] ? ' sel' : '')
     var title = document.createElement('span')
