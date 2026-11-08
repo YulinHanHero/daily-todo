@@ -23,11 +23,12 @@
     <p class="brand-sub" data-page-node-id="Tr5ggF8bCryn1oUxnbSlDK">登录后开始管理你的一天</p>
 
     <div class="login-tabs" data-page-node-id="tabRowLogin">
-      <button type="button" class="ltab active" id="tabOtp" data-page-node-id="tabOtpBtn">验证码登录</button>
-      <button type="button" class="ltab" id="tabPwd" data-page-node-id="tabPwdBtn">密码登录</button>
+      <button type="button" class="ltab active" id="tabPhone" data-page-node-id="tabPhoneBtn">手机号</button>
+      <button type="button" class="ltab" id="tabEmail" data-page-node-id="tabEmailBtn">邮箱</button>
+      <button type="button" class="ltab" id="tabPwd" data-page-node-id="tabPwdBtn">密码</button>
     </div>
 
-    <form id="loginForm" class="login-pane active" novalidate data-page-node-id="GFVJALqekYVWzr2kksdBvG">
+    <form id="phoneForm" class="login-pane active" novalidate data-page-node-id="GFVJALqekYVWzr2kksdBvG">
       <div class="field" data-page-node-id="4D82It9JnGesLdMNLCOUFt">
         <input id="phoneInput" type="tel" inputmode="numeric" maxlength="11" placeholder="请输入手机号" autocomplete="tel" data-page-node-id="EVcUBBIouuno4Olrz4XfIe">
         <button type="button" id="sendCodeBtn" class="send-btn" data-page-node-id="ittscQ0kCmjpZqIKDYoxDz">获取验证码</button>
@@ -37,27 +38,49 @@
       <button type="submit" id="loginBtn" class="btn-primary" data-page-node-id="6EcIml2kLlbtJoW0qAb2jz">登录 / 注册</button>
     </form>
 
+    <form id="emailForm" class="login-pane" novalidate data-page-node-id="emailFormNode">
+      <div class="field">
+        <input id="emailInput" type="email" inputmode="email" maxlength="80" placeholder="请输入邮箱" autocomplete="email">
+        <button type="button" id="emailSendCodeBtn" class="send-btn">获取验证码</button>
+      </div>
+      <p class="field-error" id="emailError"></p>
+      <input id="emailCodeInput" class="code-input" type="tel" inputmode="numeric" maxlength="6" placeholder="输入验证码" autocomplete="one-time-code">
+      <button type="submit" id="emailLoginBtn" class="btn-primary">登录 / 注册</button>
+    </form>
+
     <form id="pwdForm" class="login-pane" novalidate data-page-node-id="pwdFormNode">
-      <input id="pwdPhoneInput" type="tel" inputmode="numeric" maxlength="11" placeholder="手机号" autocomplete="username">
+      <input id="pwdPhoneInput" type="text" maxlength="80" placeholder="手机号或邮箱" autocomplete="username">
       <p class="field-error" id="pwdPhoneError"></p>
-      <input id="pwdInput" type="password" placeholder="密码" autocomplete="current-password">
+      <div class="pwd-wrap">
+        <input id="pwdInput" type="password" placeholder="密码" autocomplete="current-password">
+        <button type="button" class="pwd-eye" aria-label="显示密码">
+          <svg class="eye-open" viewBox="0 0 24 24" width="20" height="20"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="eye-off" viewBox="0 0 24 24" width="20" height="20"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
       <p class="field-error" id="pwdError"></p>
       <button type="submit" id="pwdLoginBtn" class="btn-primary">登录</button>
-      <button type="button" id="toRegisterBtn" class="btn-ghost">没有账号？用密码注册</button>
 
       <div id="registerBox" class="register-box">
         <div class="field">
+          <input id="regPhoneInput" type="tel" inputmode="numeric" maxlength="11" placeholder="请输入手机号" autocomplete="tel">
           <button type="button" id="regSendCodeBtn" class="send-btn">获取验证码</button>
         </div>
         <input id="regCodeInput" class="code-input" type="tel" inputmode="numeric" maxlength="6" placeholder="输入验证码" autocomplete="one-time-code">
-        <input id="regPwdInput" type="password" placeholder="设置密码（6 位以上）" autocomplete="new-password">
+        <div class="pwd-wrap">
+          <input id="regPwdInput" type="password" placeholder="设置密码（6 位以上）" autocomplete="new-password">
+          <button type="button" class="pwd-eye" aria-label="显示密码">
+            <svg class="eye-open" viewBox="0 0 24 24" width="20" height="20"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-off" viewBox="0 0 24 24" width="20" height="20"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
         <p class="field-error" id="regError"></p>
         <button type="button" id="registerBtn" class="btn-primary">注册并登录</button>
       </div>
+
+      <button type="button" id="toRegisterBtn" class="btn-ghost">没有账号？用密码注册</button>
     </form>
 
-    <div class="divider" data-page-node-id="JF1wzwZDyE2Hb3u4CBTt8A"><span data-page-node-id="jr5HABdNuCVCE7ZJ5D1ZVr">或</span></div>
-    <button id="wechatBtn" class="btn-wechat" data-page-node-id="t4gX4DWVcgplZGoTgv7nQk">微信登录</button>
     <p class="login-error" id="loginError" data-page-node-id="lg2NIx5z9qUmpxcWKdryJG"></p>
   </div>
 </div>
@@ -72,8 +95,8 @@
           <p class="today-text" id="todayText" data-page-node-id="epD1nvFEahTbqSG9BHyiJb"></p>
         </div>
         <div class="user-box" data-page-node-id="kTEpNyrSiqRTRwoosejiDp">
-          <span class="user-name" id="userName" data-page-node-id="1kXQECkIsW988spU0Nxica"></span>
           <button type="button" class="icon-btn" id="themeBtn" aria-label="切换深色模式" title="切换深色模式">🌙</button>
+          <button type="button" class="icon-btn" id="settingsBtn" aria-label="设置" title="设置">⚙</button>
           <span class="avatar" id="avatarText" data-page-node-id="j4974xeTtq1Y6BrJGlYH0V">我</span>
         </div>
       </div>
@@ -156,11 +179,17 @@
         </div>
         <div class="opts-row repeat-start-row" id="repeatStartRow">
           <span class="date-label">起始</span>
-          <input id="startInput" type="date">
+          <div class="date-picker">
+            <span class="date-display" id="startDisplay"></span>
+            <input id="startInput" type="date">
+          </div>
         </div>
         <div class="opts-row" data-page-node-id="PBC95bhwIVJXDRnj6x4dlj">
           <span class="date-label" data-page-node-id="cAVZGFBCL8BW5pPIAEyYTi">截止</span>
-          <input id="dueInput" type="date" data-page-node-id="YqycvXQUjb4EdrxGhwUgfl">
+          <div class="date-picker">
+            <span class="date-display" id="dueDisplay"></span>
+            <input id="dueInput" type="date" data-page-node-id="YqycvXQUjb4EdrxGhwUgfl">
+          </div>
           <label class="batch-toggle" data-page-node-id="1FfA0vqzAlELblp0tt7dDT">
             <input type="checkbox" id="batchToggle">
             <span>批量</span>
@@ -229,7 +258,10 @@
   <div class="d-field">
     <label class="d-label" for="dDueInput">截止日期</label>
     <div class="d-row">
-      <input id="dDueInput" type="date">
+      <div class="date-picker">
+        <span class="date-display" id="dDueDisplay"></span>
+        <input id="dDueInput" type="date">
+      </div>
       <label class="pri-toggle"><input type="checkbox" id="dPriority"><span>重要</span></label>
     </div>
   </div>
@@ -248,7 +280,10 @@
   <div class="d-field d-start-field" id="dStartField">
     <label class="d-label" for="dStartInput">起始日期</label>
     <div class="d-row">
-      <input id="dStartInput" type="date">
+      <div class="date-picker">
+        <span class="date-display" id="dStartDisplay"></span>
+        <input id="dStartInput" type="date">
+      </div>
     </div>
   </div>
   <div class="d-field">
@@ -293,5 +328,91 @@
   <div class="d-actions">
     <button type="button" class="d-btn ghost" id="confirmCancelBtn">取消</button>
     <button type="button" class="d-btn danger" id="confirmOkBtn">删除</button>
+  </div>
+</div>
+
+<!-- 设置面板 -->
+<div class="detail-mask" id="settingsMask"></div>
+<div class="detail-card settings-card" id="settingsCard">
+  <div class="d-head">
+    <span class="d-title">设置</span>
+    <button type="button" class="d-close" id="settingsClose" aria-label="关闭">×</button>
+  </div>
+
+  <div class="settings-account">
+    <span class="settings-avatar" id="settingsAvatar">我</span>
+    <div class="settings-account-info">
+      <div class="settings-name" id="settingsName">—</div>
+      <div class="settings-phone" id="settingsPhone">—</div>
+    </div>
+  </div>
+
+  <div class="settings-menu">
+    <button type="button" class="settings-menu-item" id="menuNameBtn">
+      <span class="settings-menu-icon">👤</span>
+      <div class="settings-menu-info">
+        <div class="settings-menu-name">修改用户名</div>
+        <div class="settings-menu-desc" id="menuNameDesc">—</div>
+      </div>
+      <span class="settings-menu-arrow">›</span>
+    </button>
+
+    <button type="button" class="settings-menu-item" id="menuPwdBtn">
+      <span class="settings-menu-icon">🔒</span>
+      <div class="settings-menu-info">
+        <div class="settings-menu-name">修改登录密码</div>
+        <div class="settings-menu-desc">修改后，可用手机号/邮箱 + 新密码登录</div>
+      </div>
+      <span class="settings-menu-arrow">›</span>
+    </button>
+  </div>
+
+  <div class="settings-section">
+    <button type="button" class="d-btn danger" id="settingsLogoutBtn">退出登录</button>
+  </div>
+</div>
+
+<!-- 修改用户名弹窗 -->
+<div class="detail-mask sub-mask" id="nameMask"></div>
+<div class="detail-card sub-card" id="nameCard">
+  <div class="d-head">
+    <button type="button" class="d-back" id="nameBackBtn" aria-label="返回">‹</button>
+    <span class="d-title">修改用户名</span>
+    <button type="button" class="d-close" id="nameClose" aria-label="关闭">×</button>
+  </div>
+  <div class="settings-name-field">
+    <input id="settingsNameInput" type="text" maxlength="20" placeholder="输入新用户名" autocomplete="off">
+    <button type="button" class="d-btn primary" id="settingsSaveNameBtn">保存</button>
+  </div>
+  <p class="field-error" id="settingsNameError"></p>
+</div>
+
+<!-- 修改登录密码弹窗 -->
+<div class="detail-mask sub-mask" id="pwdMask"></div>
+<div class="detail-card sub-card" id="pwdCard">
+  <div class="d-head">
+    <button type="button" class="d-back" id="pwdBackBtn" aria-label="返回">‹</button>
+    <span class="d-title">修改登录密码</span>
+    <button type="button" class="d-close" id="pwdClose" aria-label="关闭">×</button>
+  </div>
+  <p class="settings-hint" id="settingsPwdHint">修改后，可用手机号 + 新密码登录。</p>
+  <div class="settings-pwd-field pwd-wrap">
+    <input id="settingsOldPwd" type="password" placeholder="当前密码" autocomplete="current-password">
+    <button type="button" class="pwd-eye" aria-label="显示密码">
+      <svg class="eye-open" viewBox="0 0 24 24" width="20" height="20"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+      <svg class="eye-off" viewBox="0 0 24 24" width="20" height="20"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+    </button>
+  </div>
+  <div class="settings-pwd-field pwd-wrap">
+    <input id="settingsNewPwd" type="password" placeholder="新密码（6 位以上）" autocomplete="new-password">
+    <button type="button" class="pwd-eye" aria-label="显示密码">
+      <svg class="eye-open" viewBox="0 0 24 24" width="20" height="20"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+      <svg class="eye-off" viewBox="0 0 24 24" width="20" height="20"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+    </button>
+  </div>
+  <p class="field-error" id="settingsPwdError"></p>
+  <div class="settings-pwd-actions">
+    <button type="button" class="d-btn ghost" id="settingsCancelPwdBtn">取消</button>
+    <button type="button" class="d-btn primary" id="settingsSavePwdBtn">保存</button>
   </div>
 </div>

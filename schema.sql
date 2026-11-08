@@ -96,6 +96,44 @@ CREATE POLICY subjects_delete_own ON public.subjects
 
 
 -- ============================================================
+-- 表 3：profiles（用户自定义用户名/昵称）
+-- ============================================================
+-- 平台 SDK 不支持修改登录账号的 name，故用本表存用户可修改的用户名。
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id          BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  owner_id    TEXT        NOT NULL DEFAULT auth.uid(),
+  nickname    TEXT        NOT NULL DEFAULT '',
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+COMMENT ON TABLE public.profiles IS '用户自定义用户名，每个 owner_id 一行';
+
+CREATE UNIQUE INDEX IF NOT EXISTS profiles_owner_key ON public.profiles (owner_id);
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.profiles TO authenticated, anon;
+
+DROP POLICY IF EXISTS profiles_read_own ON public.profiles;
+CREATE POLICY profiles_read_own ON public.profiles
+  FOR SELECT TO authenticated, anon USING (owner_id = auth.uid());
+
+DROP POLICY IF EXISTS profiles_insert_own ON public.profiles;
+CREATE POLICY profiles_insert_own ON public.profiles
+  FOR INSERT TO authenticated, anon WITH CHECK (owner_id = auth.uid());
+
+DROP POLICY IF EXISTS profiles_update_own ON public.profiles;
+CREATE POLICY profiles_update_own ON public.profiles
+  FOR UPDATE TO authenticated, anon
+  USING (owner_id = auth.uid()) WITH CHECK (owner_id = auth.uid());
+
+DROP POLICY IF EXISTS profiles_delete_own ON public.profiles;
+CREATE POLICY profiles_delete_own ON public.profiles
+  FOR DELETE TO authenticated, anon USING (owner_id = auth.uid());
+
+
+-- ============================================================
 -- 与 v6 旧库（wbapp_VhwZMNS1PhCN2qpGcWTv6k）的差异
 --   v6 的 todos 表没有 priority / notes 两列。
 --   若在旧库上升级，只需补这两列：

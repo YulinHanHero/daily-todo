@@ -19,20 +19,23 @@ var authView = $('authView'), appView = $('appView')
 var phoneInput = $('phoneInput'), codeInput = $('codeInput')
 var sendCodeBtn = $('sendCodeBtn'), loginBtn = $('loginBtn')
 var phoneError = $('phoneError'), loginError = $('loginError')
-var wechatBtn = $('wechatBtn')
-var tabOtp = $('tabOtp'), tabPwd = $('tabPwd')
-var loginForm = $('loginForm'), pwdForm = $('pwdForm')
+var emailInput = $('emailInput'), emailCodeInput = $('emailCodeInput')
+var emailSendCodeBtn = $('emailSendCodeBtn'), emailLoginBtn = $('emailLoginBtn')
+var emailError = $('emailError')
+var tabPhone = $('tabPhone'), tabEmail = $('tabEmail'), tabPwd = $('tabPwd')
+var phoneForm = $('phoneForm'), emailForm = $('emailForm'), pwdForm = $('pwdForm')
 var pwdPhoneInput = $('pwdPhoneInput'), pwdInput = $('pwdInput'), pwdLoginBtn = $('pwdLoginBtn')
 var pwdPhoneError = $('pwdPhoneError'), pwdError = $('pwdError')
 var toRegisterBtn = $('toRegisterBtn'), registerBox = $('registerBox')
-var regSendCodeBtn = $('regSendCodeBtn'), regCodeInput = $('regCodeInput'), regPwdInput = $('regPwdInput'), regError = $('regError'), registerBtn = $('registerBtn')
+var regPhoneInput = $('regPhoneInput'), regSendCodeBtn = $('regSendCodeBtn'), regCodeInput = $('regCodeInput'), regPwdInput = $('regPwdInput'), regError = $('regError'), registerBtn = $('registerBtn')
 var todoInput = $('todoInput'), dueInput = $('dueInput'), todoList = $('todoList')
 var startInput = $('startInput'), repeatStartRow = $('repeatStartRow')
+var startDisplay = $('startDisplay'), dueDisplay = $('dueDisplay')
 var batchToggle = $('batchToggle'), batchBox = $('batchBox'), batchInput = $('batchInput'), batchPreview = $('batchPreview'), addBtn = $('addBtn')
 var repeatDaysBox = $('repeatDays')
 var addMask = $('addMask'), fabBtn = $('fabBtn'), sheetClose = $('sheetClose')
 var remainText = $('remainText'), doneText = $('doneText'), emptyState = $('emptyState'), emptyText = $('emptyText')
-var userName = $('userName'), avatarText = $('avatarText')
+var avatarText = $('avatarText')
 var logoutBtn = $('logoutBtn')
 var navCenter = $('navCenter'), todayBtn = $('todayBtn')
 var dayPane = $('dayPane'), weekPane = $('weekPane'), monthPane = $('monthPane'), monthGrid = $('monthGrid')
@@ -45,6 +48,7 @@ var addSubjectPick = $('addSubjectPick'), addPriority = $('addPriority'), manage
 var detailMask = $('detailMask'), detailCard = $('detailCard'), detailClose = $('detailClose')
 var dTitleInput = $('dTitleInput'), dDueInput = $('dDueInput'), dPriority = $('dPriority')
 var dStartInput = $('dStartInput'), dStartField = $('dStartField')
+var dDueDisplay = $('dDueDisplay'), dStartDisplay = $('dStartDisplay')
 var dRepeatDays = $('dRepeatDays'), dSubjectPick = $('dSubjectPick'), dNotes = $('dNotes')
 var dSaveBtn = $('dSaveBtn'), dDeleteBtn = $('dDeleteBtn'), dCancelBtn = $('dCancelBtn')
 var subjectMask = $('subjectMask'), subjectCard = $('subjectCard'), subjectClose = $('subjectClose')
@@ -52,6 +56,16 @@ var subjectList = $('subjectList'), subjectNameInput = $('subjectNameInput'), su
 var subjectAddBtn = $('subjectAddBtn'), subjectCancelBtn = $('subjectCancelBtn')
 var confirmMask = $('confirmMask'), confirmCard = $('confirmCard'), confirmTitle = $('confirmTitle'), confirmText = $('confirmText')
 var confirmCancelBtn = $('confirmCancelBtn'), confirmOkBtn = $('confirmOkBtn')
+var settingsBtn = $('settingsBtn')
+var settingsMask = $('settingsMask'), settingsCard = $('settingsCard'), settingsClose = $('settingsClose')
+var settingsAvatar = $('settingsAvatar'), settingsName = $('settingsName'), settingsPhone = $('settingsPhone')
+var menuNameBtn = $('menuNameBtn'), menuNameDesc = $('menuNameDesc'), menuPwdBtn = $('menuPwdBtn')
+var nameMask = $('nameMask'), nameCard = $('nameCard'), nameBackBtn = $('nameBackBtn'), nameClose = $('nameClose')
+var settingsNameInput = $('settingsNameInput'), settingsSaveNameBtn = $('settingsSaveNameBtn'), settingsNameError = $('settingsNameError')
+var pwdMask = $('pwdMask'), pwdCard = $('pwdCard'), pwdBackBtn = $('pwdBackBtn'), pwdClose = $('pwdClose')
+var settingsPwdHint = $('settingsPwdHint'), settingsOldPwd = $('settingsOldPwd'), settingsNewPwd = $('settingsNewPwd')
+var settingsPwdError = $('settingsPwdError'), settingsSavePwdBtn = $('settingsSavePwdBtn'), settingsCancelPwdBtn = $('settingsCancelPwdBtn')
+var settingsLogoutBtn = $('settingsLogoutBtn')
 
 var WEEK_CN = ['日', '一', '二', '三', '四', '五', '六']
 var WEEK_MON = ['一', '二', '三', '四', '五', '六', '日']
@@ -62,9 +76,15 @@ var session = null
 var pendingOtp = null
 var sending = false
 var countdownTimer = null
+var emailPendingOtp = null
+var emailSending = false
+var emailCountdownTimer = null
 var regPendingOtp = null
 var regSending = false
 var regCountdownTimer = null
+var currentUserPhone = ''
+var currentUserEmail = ''
+var profileNickname = ''   /* 用户在 profiles 表里自定义的用户名 */
 
 var viewMode = 'day'      /* 'day' | 'week' | 'month' | 'stats' */
 var cursor = startOfDay(new Date())
@@ -104,6 +124,23 @@ function parseDate(s) {
   var p = String(s).split('-')
   return new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10))
 }
+/* 中文日期展示：'2026-11-08' -> '11 月 8 日 周日'（与头部日期风格一致） */
+function fmtDateCN(s) {
+  if (!s) return ''
+  var d = parseDate(s)
+  if (isNaN(d.getTime())) return ''
+  return (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日 · 周' + WEEK_CN[d.getDay()]
+}
+/* 同步日期选择器的中文展示文本 */
+function syncDateDisplay(input, display) {
+  if (!input || !display) return
+  display.textContent = fmtDateCN(input.value)
+}
+/* 日期选择器变化时实时更新中文展示 */
+dueInput.addEventListener('change', function () { syncDateDisplay(dueInput, dueDisplay) })
+startInput.addEventListener('change', function () { syncDateDisplay(startInput, startDisplay) })
+dDueInput.addEventListener('change', function () { syncDateDisplay(dDueInput, dDueDisplay) })
+dStartInput.addEventListener('change', function () { syncDateDisplay(dStartInput, dStartDisplay) })
 function jsDowToIso(dow) { return dow === 0 ? 7 : dow }
 function isoDowToJs(iso) { return iso === 7 ? 0 : iso }
 
@@ -188,7 +225,7 @@ function showLoginView() {
   batchMode = false; updateBatchUI()
   viewMode = 'day'; cursor = startOfDay(new Date())
   updateTabs()
-  closeAddSheet(); closeDetail(); closeSubjectManager(); closeConfirm()
+  closeAddSheet(); closeDetail(); closeSubjectManager(); closeConfirm(); closeSettings()
   appView.classList.remove('active')
   authView.classList.add('active')
   render()
@@ -215,7 +252,7 @@ function friendlyError(error) {
   if (error && error.kind === 'unauthenticated') return '登录已过期，请重新登录'
   if (error && error.code === '23505') return '该名称已存在，换一个试试'
   var msg = error && error.message ? String(error.message) : ''
-  if (/password not set/i.test(msg)) return '该手机号还没设置过密码，请切换到「验证码登录」进入后即可正常使用'
+  if (/password not set/i.test(msg)) return '该手机号还没设置过密码，请切换到「手机号」用验证码登录进入后即可正常使用'
   if (/invalid credentials|wrong password|incorrect/i.test(msg)) return '手机号或密码不正确'
   if (msg) return msg
   return '网络异常，请稍后重试'
@@ -234,21 +271,8 @@ async function restoreAuth() {
     showLoginError(errDesc ? ('登录失败：' + errDesc) : '授权回调缺少有效的登录方式，请重新登录。')
     return
   }
-  var handleCallback = cloud.auth.handleWechatWebCallback
-  if (typeof handleCallback !== 'function') {
-    showLoginError('暂时无法使用此方式登录，请联系应用管理员。')
-    return
-  }
-  var res = await handleCallback.call(cloud.auth)
-  if (res.error) {
-    showLoginError(friendlyError(res.error))
-  } else if (res.data) {
-    for (var key of ['code', 'state', 'provider']) url.searchParams.delete(key)
-    history.replaceState(null, '', url.pathname + url.search + url.hash)
-    await enterApp(res.data)
-  } else {
-    await continueNormalStartup()
-  }
+  // 微信 OAuth 已下线，旧回调统一走会话恢复
+  await continueNormalStartup()
 }
 
 async function continueNormalStartup() {
@@ -265,13 +289,27 @@ async function continueNormalStartup() {
 /* ================= 进入应用 ================= */
 async function enterApp(s) {
   session = s
-  var name = (s && s.user && s.user.name) || ''
-  userName.textContent = name || ''
-  avatarText.textContent = name ? name.trim().charAt(0) : '我'
   syncDueInput()
   showAppView()
+  await loadProfile()
   await loadSubjects()
   await loadView()
+}
+
+/* 从 profiles 表读取自定义用户名，回退到登录账号 name */
+async function loadProfile() {
+  profileNickname = ''
+  try {
+    var res = await cloud.database.from('profiles').select('*').limit(1)
+    if (!res.error && Array.isArray(res.data) && res.data.length > 0) {
+      profileNickname = String(res.data[0].nickname || '').trim()
+    }
+  } catch (e) {
+    profileNickname = ''
+  }
+  var fallback = (session && session.user && session.user.name) || ''
+  var displayName = profileNickname || fallback
+  avatarText.textContent = displayName ? displayName.trim().charAt(0) : '我'
 }
 
 /* ================= 手机验证码登录 ================= */
@@ -318,7 +356,7 @@ function startCountdown(sec) {
   }, 1000)
 }
 
-document.getElementById('loginForm').addEventListener('submit', async function (e) {
+document.getElementById('phoneForm').addEventListener('submit', async function (e) {
   e.preventDefault()
   var phone = phoneInput.value.trim()
   var code = codeInput.value.trim()
@@ -347,17 +385,94 @@ document.getElementById('loginForm').addEventListener('submit', async function (
   await enterApp(completed.data)
 })
 
+/* ================= 邮箱验证码登录 ================= */
+emailInput.addEventListener('input', function () { emailError.textContent = '' })
+
+emailSendCodeBtn.addEventListener('click', async function () {
+  if (emailSending) return
+  var email = emailInput.value.trim()
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { emailError.textContent = '请输入正确的邮箱地址'; return }
+  emailError.textContent = ''; showLoginError('')
+  emailSending = true
+  emailSendCodeBtn.disabled = true
+  emailSendCodeBtn.textContent = '发送中…'
+  var sent = await cloud.auth.sendOtp({ email: email })
+  emailSending = false
+  if (sent.error) {
+    emailSendCodeBtn.disabled = false
+    emailSendCodeBtn.textContent = '获取验证码'
+    showLoginError(friendlyError(sent.error))
+    return
+  }
+  emailPendingOtp = {
+    email: email,
+    verificationId: sent.data.verificationId,
+    isExistingUser: sent.data.isExistingUser
+  }
+  emailCodeInput.focus()
+  startEmailCountdown(60)
+})
+
+function startEmailCountdown(sec) {
+  clearInterval(emailCountdownTimer)
+  emailSendCodeBtn.disabled = true
+  emailSendCodeBtn.textContent = sec + 's'
+  emailCountdownTimer = setInterval(function () {
+    sec--
+    if (sec <= 0) {
+      clearInterval(emailCountdownTimer)
+      emailSendCodeBtn.disabled = false
+      emailSendCodeBtn.textContent = '重新获取'
+    } else {
+      emailSendCodeBtn.textContent = sec + 's'
+    }
+  }, 1000)
+}
+
+emailForm.addEventListener('submit', async function (e) {
+  e.preventDefault()
+  var email = emailInput.value.trim()
+  var code = emailCodeInput.value.trim()
+  if (!emailPendingOtp || emailPendingOtp.email !== email) {
+    showLoginError('请先获取当前邮箱的验证码')
+    return
+  }
+  if (!code) { showLoginError('请输入验证码'); return }
+  emailLoginBtn.disabled = true
+  emailLoginBtn.textContent = '登录中…'
+  var completed = await cloud.auth.verifyOtp({
+    email: email,
+    verificationId: emailPendingOtp.verificationId,
+    isExistingUser: emailPendingOtp.isExistingUser,
+    token: code
+  })
+  emailLoginBtn.disabled = false
+  emailLoginBtn.textContent = '登录 / 注册'
+  if (completed.error) {
+    showLoginError(friendlyError(completed.error))
+    return
+  }
+  emailPendingOtp = null
+  showLoginError('')
+  emailCodeInput.value = ''
+  await enterApp(completed.data)
+})
+
 /* ================= 密码登录 / 注册 ================= */
-tabOtp.addEventListener('click', function () { switchLoginTab('otp') })
+tabPhone.addEventListener('click', function () { switchLoginTab('phone') })
+tabEmail.addEventListener('click', function () { switchLoginTab('email') })
 tabPwd.addEventListener('click', function () { switchLoginTab('pwd') })
 
 function switchLoginTab(mode) {
-  var isOtp = mode === 'otp'
-  tabOtp.classList.toggle('active', isOtp)
-  tabPwd.classList.toggle('active', !isOtp)
-  loginForm.classList.toggle('active', isOtp)
-  pwdForm.classList.toggle('active', !isOtp)
+  tabPhone.classList.toggle('active', mode === 'phone')
+  tabEmail.classList.toggle('active', mode === 'email')
+  tabPwd.classList.toggle('active', mode === 'pwd')
+  phoneForm.classList.toggle('active', mode === 'phone')
+  emailForm.classList.toggle('active', mode === 'email')
+  pwdForm.classList.toggle('active', mode === 'pwd')
   loginError.textContent = ''
+  phoneError.textContent = ''
+  emailError.textContent = ''
   pwdPhoneError.textContent = ''
   pwdError.textContent = ''
   regError.textContent = ''
@@ -369,13 +484,18 @@ pwdInput.addEventListener('input', function () { pwdError.textContent = '' })
 
 pwdForm.addEventListener('submit', async function (e) {
   e.preventDefault()
-  var phone = pwdPhoneInput.value.trim()
+  var account = pwdPhoneInput.value.trim()
   var pwd = pwdInput.value
-  if (!/^1\d{10}$/.test(phone)) { pwdPhoneError.textContent = '请输入正确的 11 位手机号'; return }
+  if (!account) { pwdPhoneError.textContent = '请输入手机号或邮箱'; return }
   if (!pwd) { pwdError.textContent = '请输入密码'; return }
+  var isPhone = /^1\d{10}$/.test(account)
+  var isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(account)
+  if (!isPhone && !isEmail) { pwdPhoneError.textContent = '请输入正确的手机号或邮箱'; return }
   pwdLoginBtn.disabled = true
   pwdLoginBtn.textContent = '登录中…'
-  var res = await cloud.auth.signInWithPassword({ phone: phone, password: pwd })
+  var res = isPhone
+    ? await cloud.auth.signInWithPassword({ phone: account, password: pwd })
+    : await cloud.auth.signInWithPassword({ email: account, password: pwd })
   pwdLoginBtn.disabled = false
   pwdLoginBtn.textContent = '登录'
   if (res.error) {
@@ -386,11 +506,18 @@ pwdForm.addEventListener('submit', async function (e) {
   await enterApp(res.data)
 })
 
-toRegisterBtn.addEventListener('click', function () { setRegisterMode(true) })
+toRegisterBtn.addEventListener('click', function () {
+  setRegisterMode(!registerBox.classList.contains('show'))
+})
 
 function setRegisterMode(show) {
   registerBox.classList.toggle('show', show)
-  toRegisterBtn.style.display = show ? 'none' : ''
+  /* 进入注册模式：隐藏登录输入组与顶部登录方式标签，只展示注册内容；按钮改为「返回登录」 */
+  var hideEls = [pwdPhoneInput, pwdPhoneError, pwdInput, pwdError, pwdLoginBtn]
+  hideEls.forEach(function (el) { if (el) el.style.display = show ? 'none' : '' })
+  var tabs = document.querySelector('.login-tabs')
+  if (tabs) tabs.style.display = show ? 'none' : ''
+  toRegisterBtn.textContent = show ? '返回登录' : '没有账号？用密码注册'
   if (!show) {
     regCodeInput.value = ''
     regPwdInput.value = ''
@@ -400,9 +527,9 @@ function setRegisterMode(show) {
 
 regSendCodeBtn.addEventListener('click', async function () {
   if (regSending) return
-  var phone = pwdPhoneInput.value.trim()
-  if (!/^1\d{10}$/.test(phone)) { pwdPhoneError.textContent = '请先在上方填写正确的 11 位手机号'; return }
-  pwdPhoneError.textContent = ''
+  var phone = regPhoneInput.value.trim()
+  if (!/^1\d{10}$/.test(phone)) { regError.textContent = '请先填写正确的 11 位手机号'; return }
+  regError.textContent = ''
   regSending = true
   regSendCodeBtn.disabled = true
   regSendCodeBtn.textContent = '发送中…'
@@ -447,7 +574,7 @@ function startRegCountdown(sec) {
 }
 
 registerBtn.addEventListener('click', async function () {
-  var phone = pwdPhoneInput.value.trim()
+  var phone = regPhoneInput.value.trim()
   var code = regCodeInput.value.trim()
   var pwd = regPwdInput.value
   if (!regPendingOtp || regPendingOtp.phone !== phone) {
@@ -478,32 +605,197 @@ registerBtn.addEventListener('click', async function () {
   await enterApp(completed.data)
 })
 
-/* ================= 微信登录 ================= */
-wechatBtn.addEventListener('click', async function () {
-  wechatBtn.disabled = true
-  var res = await cloud.auth.signInWithOAuth({
-    provider: 'wechat',
-    redirectTo: location.origin
-  })
-  if (res.error) {
-    wechatBtn.disabled = false
-    showLoginError(friendlyError(res.error))
-    return
-  }
-  location.assign(res.data.url)
-})
-
 /* ================= 退出登录 ================= */
+async function doSignOut() {
+  var res = await cloud.auth.signOut()
+  if (res.error) { showToast(friendlyError(res.error)); return false }
+  showLoginView()
+  return true
+}
 logoutBtn.addEventListener('click', async function () {
   logoutBtn.disabled = true
-  var res = await cloud.auth.signOut()
+  await doSignOut()
   logoutBtn.disabled = false
-  if (res.error) { showToast(friendlyError(res.error)); return }
-  showLoginView()
 })
 
 cloud.auth.onAuthStateChange(function (event) {
   if (event === 'SIGNED_OUT') showLoginView()
+})
+
+/* ================= 设置面板 ================= */
+function closeSettings() {
+  settingsMask.classList.remove('show')
+  settingsCard.classList.remove('show')
+  closeSubPanels()
+}
+function openSettings() {
+  closeAddSheet(); closeDetail(); closeSubjectManager(); closeConfirm(); closeSettings(); closeSubPanels()
+  renderSettingsAccount()
+  settingsMask.classList.add('show')
+  settingsCard.classList.add('show')
+}
+settingsBtn.addEventListener('click', openSettings)
+settingsClose.addEventListener('click', closeSettings)
+settingsMask.addEventListener('click', closeSettings)
+
+/* 关闭所有子功能弹窗 */
+function closeSubPanels() {
+  nameMask.classList.remove('show'); nameCard.classList.remove('show')
+  pwdMask.classList.remove('show'); pwdCard.classList.remove('show')
+}
+/* 从功能清单跳转到修改用户名 */
+function openNamePanel() {
+  settingsNameInput.value = profileNickname
+  settingsNameError.textContent = ''
+  settingsMask.classList.remove('show')
+  settingsCard.classList.remove('show')
+  nameMask.classList.add('show')
+  nameCard.classList.add('show')
+}
+/* 从功能清单跳转到修改密码 */
+function openPwdPanel() {
+  settingsOldPwd.value = ''
+  settingsNewPwd.value = ''
+  settingsPwdError.textContent = ''
+  renderSettingsPwdHint()
+  settingsMask.classList.remove('show')
+  settingsCard.classList.remove('show')
+  pwdMask.classList.add('show')
+  pwdCard.classList.add('show')
+}
+/* 从子弹窗返回设置首页 */
+function backToSettings() {
+  closeSubPanels()
+  settingsMask.classList.add('show')
+  settingsCard.classList.add('show')
+}
+menuNameBtn.addEventListener('click', openNamePanel)
+menuPwdBtn.addEventListener('click', openPwdPanel)
+nameBackBtn.addEventListener('click', backToSettings)
+pwdBackBtn.addEventListener('click', backToSettings)
+settingsCancelPwdBtn.addEventListener('click', backToSettings)
+nameClose.addEventListener('click', closeSettings)
+pwdClose.addEventListener('click', closeSettings)
+nameMask.addEventListener('click', closeSettings)
+pwdMask.addEventListener('click', closeSettings)
+
+/* 读取当前登录账号的手机号与邮箱 */
+async function loadCurrentUserIdentity() {
+  if (typeof cloud.auth.getUser !== 'function') return { phone: '', email: '' }
+  var res = await cloud.auth.getUser()
+  if (res.error || !res.data) return { phone: '', email: '' }
+  return {
+    phone: (res.data.phone && typeof res.data.phone === 'string') ? res.data.phone : '',
+    email: (res.data.email && typeof res.data.email === 'string') ? res.data.email : ''
+  }
+}
+
+function maskEmail(email) {
+  var at = email.indexOf('@')
+  if (at <= 0) return email
+  var head = email.slice(0, at)
+  var tail = email.slice(at)
+  var visible = head.slice(0, Math.min(2, head.length))
+  return visible + '***' + tail
+}
+
+/* 填充设置面板的账号信息与登录状态 */
+async function renderSettingsAccount() {
+  var fallback = (session && session.user && session.user.name) || ''
+  var displayName = profileNickname || fallback
+  settingsName.textContent = displayName || '未命名用户'
+  settingsAvatar.textContent = displayName ? displayName.trim().charAt(0) : '我'
+  settingsNameInput.value = profileNickname
+  settingsNameError.textContent = ''
+  menuNameDesc.textContent = displayName || '未设置'
+
+  var idn = await loadCurrentUserIdentity()
+  currentUserPhone = idn.phone
+  currentUserEmail = idn.email
+
+  if (currentUserPhone) {
+    var masked = currentUserPhone.replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2')
+    settingsPhone.textContent = masked
+  } else if (currentUserEmail) {
+    settingsPhone.textContent = maskEmail(currentUserEmail)
+  } else {
+    settingsPhone.textContent = '—'
+  }
+}
+
+/* 根据登录方式生成修改密码提示文案 */
+function renderSettingsPwdHint() {
+  if (currentUserPhone) {
+    settingsPwdHint.textContent = '当前账号已绑定手机号。设置密码后，可用手机号 + 密码登录。'
+  } else if (currentUserEmail) {
+    settingsPwdHint.textContent = '当前账号通过邮箱登录。设置密码后，可用邮箱 + 密码登录。'
+  } else {
+    settingsPwdHint.textContent = '设置密码后，可用手机号或邮箱 + 密码登录。'
+  }
+}
+
+/* 保存用户名到 profiles 表（upsert：有则更新，无则插入） */
+settingsSaveNameBtn.addEventListener('click', async function () {
+  var name = settingsNameInput.value.trim()
+  if (!name) { settingsNameError.textContent = '用户名不能为空'; return }
+  if (name.length > 20) { settingsNameError.textContent = '用户名最多 20 个字符'; return }
+  settingsNameError.textContent = ''
+  settingsSaveNameBtn.disabled = true
+  settingsSaveNameBtn.textContent = '保存中…'
+
+  var res = await cloud.database.from('profiles').select('id').limit(1)
+  var result
+  if (!res.error && Array.isArray(res.data) && res.data.length > 0) {
+    result = await cloud.database.from('profiles').update({ nickname: name }).eq('id', numId(res.data[0].id)).select()
+  } else {
+    result = await cloud.database.from('profiles').insert({ nickname: name }).select()
+  }
+
+  settingsSaveNameBtn.disabled = false
+  settingsSaveNameBtn.textContent = '保存'
+  if (result && result.error) { settingsNameError.textContent = friendlyError(result.error); return }
+
+  profileNickname = name
+  var displayName = profileNickname || ((session && session.user && session.user.name) || '')
+  settingsName.textContent = displayName
+  settingsAvatar.textContent = displayName ? displayName.trim().charAt(0) : '我'
+  menuNameDesc.textContent = displayName || '未设置'
+  avatarText.textContent = displayName ? displayName.trim().charAt(0) : '我'
+  showToast('用户名已更新')
+  backToSettings()
+})
+
+/* 设置/修改密码 —— 提交（resetPasswordForOld：需旧密码，仅对已设密码的账号有效） */
+settingsSavePwdBtn.addEventListener('click', async function () {
+  var oldPwd = settingsOldPwd.value
+  var newPwd = settingsNewPwd.value
+  if (!newPwd || newPwd.length < 6) { settingsPwdError.textContent = '请设置至少 6 位新密码'; return }
+  if (!oldPwd) { settingsPwdError.textContent = '请输入当前密码（若从未设置过密码，当前账号暂无法补设，请用验证码登录）'; return }
+  settingsPwdError.textContent = ''
+  settingsSavePwdBtn.disabled = true
+  settingsSavePwdBtn.textContent = '保存中…'
+  var res = await cloud.auth.resetPasswordForOld({
+    oldPassword: oldPwd,
+    newPassword: newPwd
+  })
+  settingsSavePwdBtn.disabled = false
+  settingsSavePwdBtn.textContent = '保存'
+  if (res.error) {
+    settingsPwdError.textContent = friendlyError(res.error)
+    return
+  }
+  settingsOldPwd.value = ''
+  settingsNewPwd.value = ''
+  settingsPwdError.textContent = ''
+  showToast('密码修改成功')
+  closeSettings()
+})
+
+settingsLogoutBtn.addEventListener('click', async function () {
+  settingsLogoutBtn.disabled = true
+  await doSignOut()
+  settingsLogoutBtn.disabled = false
+  closeSettings()
 })
 
 /* ================= 视图切换与导航 ================= */
@@ -550,6 +842,8 @@ function goToDay(date) {
 function syncDueInput() {
   dueInput.value = fmtDate(cursor)
   if (!startInput.value) startInput.value = fmtDate(startOfDay(new Date()))
+  syncDateDisplay(dueInput, dueDisplay)
+  syncDateDisplay(startInput, startDisplay)
 }
 
 /* 根据是否勾选了重复，控制「起始」字段的显示 */
@@ -934,6 +1228,8 @@ function openAddSheet() {
   addMask.classList.add('show')
   addForm.classList.add('show')
   if (!startInput.value) startInput.value = fmtDate(startOfDay(new Date()))
+  syncDateDisplay(dueInput, dueDisplay)
+  syncDateDisplay(startInput, startDisplay)
   updateRepeatStartUI()
   todoInput.focus()
 }
@@ -1154,6 +1450,8 @@ function openDetail(id) {
   } else {
     dDueInput.value = String(t.due_date || '').slice(0, 10)
   }
+  syncDateDisplay(dDueInput, dDueDisplay)
+  syncDateDisplay(dStartInput, dStartDisplay)
   editingSubjectKey = t.subject || null
   renderSubjectPickers()
   updateDetailStartUI()
@@ -1924,6 +2222,20 @@ function renderCounter() {
   try { dark = localStorage.getItem(THEME_KEY) === 'dark' } catch (e) {}
   document.body.classList.toggle('dark', dark)
   themeBtn.textContent = dark ? '☀️' : '🌙'
+
+  /* 密码可见性切换：点击小眼睛切换明文/密文 */
+  var eyeBtns = document.querySelectorAll('.pwd-eye')
+  eyeBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var wrap = btn.closest('.pwd-wrap')
+      var input = wrap ? wrap.querySelector('input') : null
+      if (!input) return
+      var reveal = input.type === 'password'
+      input.type = reveal ? 'text' : 'password'
+      if (wrap) wrap.classList.toggle('revealed', reveal)
+      btn.setAttribute('aria-label', reveal ? '隐藏密码' : '显示密码')
+    })
+  })
 })()
 
 if (cloud) restoreAuth()
