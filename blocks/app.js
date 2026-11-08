@@ -108,9 +108,6 @@ var editingSubjectKey = null
 var undoRecord = null        /* 待撤销的删除记录 */
 var undoTimer = null
 var undoBar = null
-var doneUndoBar = null       /* 完成任务撤销条 */
-var doneUndoTimer = null
-var doneUndoId = null        /* 待撤销完成的任务 id */
 var soundOn = false          /* 完成音效开关（默认关闭） */
 var SOUND_KEY = 'todo_sound'
 
@@ -1598,13 +1595,10 @@ async function toggleTodo(id) {
     render()
   }
   if (next) {
-    /* 标记完成：激励反馈 + 撤销缓冲 */
+    /* 标记完成：激励反馈 */
     playDoneSound()
     showToast(randomPraise())
-    showDoneUndo(id)
     celebrateIfDayAllDone(item)
-  } else {
-    hideDoneUndo()
   }
 }
 
@@ -1667,43 +1661,6 @@ function flipSettle(container) {
       }, 500)
     })
   })
-}
-
-/* 完成任务撤销条（复用删除撤销的视觉，但针对"完成"） */
-function showDoneUndo(id) {
-  doneUndoId = id
-  clearTimeout(doneUndoTimer)
-  if (!doneUndoBar) {
-    doneUndoBar = document.createElement('div')
-    doneUndoBar.className = 'bulk-bar show'
-    doneUndoBar.style.position = 'fixed'
-    doneUndoBar.style.left = '16px'
-    doneUndoBar.style.right = '16px'
-    doneUndoBar.style.bottom = 'calc(92px + env(safe-area-inset-bottom))'
-    doneUndoBar.style.margin = '0'
-    doneUndoBar.style.zIndex = '160'
-    doneUndoBar.innerHTML = '<span class="bulk-count">已标记完成</span><div class="bulk-acts"><button type="button" class="bulk-btn" id="doneUndoBtn">撤销</button></div>'
-    document.body.appendChild(doneUndoBar)
-    doneUndoBar.querySelector('#doneUndoBtn').addEventListener('click', undoDone)
-  }
-  doneUndoBar.classList.add('show')
-  doneUndoTimer = setTimeout(hideDoneUndo, 5000)
-}
-function hideDoneUndo() {
-  if (doneUndoBar) doneUndoBar.classList.remove('show')
-  doneUndoId = null
-}
-async function undoDone() {
-  var id = doneUndoId
-  hideDoneUndo()
-  if (!id) return
-  var res = await cloud.database.from('todos').update({ done: false }).eq('id', numId(id)).select()
-  if (res.error) { showToast(friendlyError(res.error)); return }
-  for (var i = 0; i < allTodos.length; i++) {
-    if (String(allTodos[i].id) === String(id)) { allTodos[i].done = false; break }
-  }
-  expandRange()
-  render()
 }
 
 /* 某天任务全部完成时庆祝 */
