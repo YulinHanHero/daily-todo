@@ -3682,7 +3682,7 @@ function renderCounter() {
 /* ================= 日期显示 & 启动 ================= */
 (function initToday() {
   var d = new Date()
-  $('todayText').textContent = d.getFullYear() + ' 年 ' + (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日 · 星期' + WEEK_CN[d.getDay()]
+  $('todayText').textContent = d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate() + ' · 星期' + WEEK_CN[d.getDay()]
   var dark = false
   try { dark = localStorage.getItem(THEME_KEY) === 'dark' } catch (e) {}
   document.body.classList.toggle('dark', dark)
