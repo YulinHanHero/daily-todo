@@ -134,6 +134,48 @@ CREATE POLICY profiles_delete_own ON public.profiles
 
 
 -- ============================================================
+-- 表 4：todo_done_dates（重复任务按日期记录完成状态）
+-- ============================================================
+-- 重复任务用一条 todos 记录代表多个日期的实例，但 done 字段只能表达
+-- 整条记录的完成状态，无法区分「周三完成、周五未完成」。
+-- 故引入本表：重复任务某天勾选完成时，写入一行 (todo_id, done_date)；
+-- 取消完成时删除对应行。非重复任务继续用 todos.done 字段。
+CREATE TABLE IF NOT EXISTS public.todo_done_dates (
+  id          BIGINT      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  todo_id     BIGINT      NOT NULL,
+  owner_id    TEXT        NOT NULL DEFAULT auth.uid(),
+  done_date   DATE        NOT NULL DEFAULT CURRENT_DATE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+COMMENT ON TABLE public.todo_done_dates IS '重复任务按日期记录完成状态，owner_id 隔离';
+
+CREATE UNIQUE INDEX IF NOT EXISTS todo_done_dates_todo_date_key ON public.todo_done_dates (todo_id, done_date);
+CREATE INDEX IF NOT EXISTS todo_done_dates_owner_idx ON public.todo_done_dates (owner_id, done_date);
+
+ALTER TABLE public.todo_done_dates ENABLE ROW LEVEL SECURITY;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.todo_done_dates TO authenticated, anon;
+
+DROP POLICY IF EXISTS tdd_read_own ON public.todo_done_dates;
+CREATE POLICY tdd_read_own ON public.todo_done_dates
+  FOR SELECT TO authenticated, anon USING (owner_id = auth.uid());
+
+DROP POLICY IF EXISTS tdd_insert_own ON public.todo_done_dates;
+CREATE POLICY tdd_insert_own ON public.todo_done_dates
+  FOR INSERT TO authenticated, anon WITH CHECK (owner_id = auth.uid());
+
+DROP POLICY IF EXISTS tdd_update_own ON public.todo_done_dates;
+CREATE POLICY tdd_update_own ON public.todo_done_dates
+  FOR UPDATE TO authenticated, anon
+  USING (owner_id = auth.uid()) WITH CHECK (owner_id = auth.uid());
+
+DROP POLICY IF EXISTS tdd_delete_own ON public.todo_done_dates;
+CREATE POLICY tdd_delete_own ON public.todo_done_dates
+  FOR DELETE TO authenticated, anon USING (owner_id = auth.uid());
+
+
+-- ============================================================
 -- 与 v6 旧库（wbapp_VhwZMNS1PhCN2qpGcWTv6k）的差异
 --   v6 的 todos 表没有 priority / notes 两列。
 --   若在旧库上升级，只需补这两列：

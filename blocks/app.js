@@ -91,6 +91,7 @@ var viewMode = 'day'      /* 'day' | 'week' | 'month' | 'stats' */
 var cursor = startOfDay(new Date())
 var allTodos = []
 var rangeTodos = []
+var doneDatesMap = {}        /* { todoId: { dateKey: true } } 重复任务按日期记录完成状态 */
 var selectedRepeat = {}
 var batchMode = false
 
@@ -889,6 +890,23 @@ async function loadSubjects() {
 }
 
 /* ================= 数据加载 ================= */
+async function loadDoneDates() {
+  try {
+    var res = await cloud.database.from('todo_done_dates').select('*')
+    var map = {}
+    if (!res.error && Array.isArray(res.data)) {
+      res.data.forEach(function (r) {
+        var tid = String(r.todo_id)
+        if (!map[tid]) map[tid] = {}
+        map[tid][String(r.done_date || '').slice(0, 10)] = true
+      })
+    }
+    doneDatesMap = map
+  } catch (e) {
+    doneDatesMap = {}
+  }
+}
+
 async function loadView() {
   var res = await cloud.database.from('todos').select('*')
     .order('due_date', { ascending: true })
@@ -901,6 +919,7 @@ async function loadView() {
     return
   }
   allTodos = Array.isArray(res.data) ? res.data : []
+  await loadDoneDates()
   expandRange()
   render()
 }
@@ -971,18 +990,30 @@ function expandBetween(start, end) {
 }
 
 function makeInstance(t, dateKey, isRepeat) {
+  /* 重复任务：完成状态按「该实例的日期」单独记录；非重复任务用源记录 done */
+  var done = t.done
+  if (isRepeat) {
+    var m = doneDatesMap[String(t.id)]
+    done = !!(m && m[dateKey])
+  }
   return {
     id: t.id,
     title: t.title,
-    done: t.done,
+    done: done,
     due_date: dateKey,
     repeat_days: t.repeat_days,
     isRepeat: isRepeat,
     subject: t.subject,
     priority: !!t.priority,
     notes: t.notes || '',
-    created_at: t.created_at
+    created_at: t.created_at,
+    instKey: String(t.id) + '|' + dateKey
   }
+}
+
+/* 实例唯一键：重复任务同一天唯一；用于 DOM data-id 与 FLIP 动画精确匹配 */
+function instanceKey(item) {
+  return String(item.id) + '|' + String(item.due_date || '').slice(0, 10)
 }
 
 function expandRange() {
@@ -1576,21 +1607,38 @@ function playDoneSound() {
   } catch (e) {}
 }
 
-async function toggleTodo(id) {
-  var item = findTodo(id)
+async function toggleTodo(item) {
   if (!item) return
+  var id = item.id
   var next = !item.done
-  var res = await cloud.database.from('todos').update({ done: next }).eq('id', numId(id)).select()
-  if (res.error) { showToast(friendlyError(res.error)); return }
-  var affected = Array.isArray(res.data) ? res.data : []
-  if (affected.length === 0) { showToast('修改失败，该待办可能已不存在'); return }
-  for (var i = 0; i < allTodos.length; i++) {
-    if (String(allTodos[i].id) === String(id)) { allTodos[i].done = next; break }
+  if (item.isRepeat) {
+    /* 重复任务：按「实例日期」写/删完成日期记录，只影响当天 */
+    var dateKey = String(item.due_date || '').slice(0, 10)
+    if (next) {
+      var insRes = await cloud.database.from('todo_done_dates').insert({ todo_id: numId(id), done_date: dateKey }).select()
+      if (insRes.error) { showToast(friendlyError(insRes.error)); return }
+    } else {
+      var delRes = await cloud.database.from('todo_done_dates').delete().eq('todo_id', numId(id)).eq('done_date', dateKey).select()
+      if (delRes.error) { showToast(friendlyError(delRes.error)); return }
+    }
+    /* 更新本地完成日期集合 */
+    var m = doneDatesMap[String(id)] || (doneDatesMap[String(id)] = {})
+    if (next) m[dateKey] = true
+    else delete m[dateKey]
+  } else {
+    /* 非重复任务：直接改源记录 done 字段 */
+    var res = await cloud.database.from('todos').update({ done: next }).eq('id', numId(id)).select()
+    if (res.error) { showToast(friendlyError(res.error)); return }
+    var affected = Array.isArray(res.data) ? res.data : []
+    if (affected.length === 0) { showToast('修改失败，该待办可能已不存在'); return }
+    for (var i = 0; i < allTodos.length; i++) {
+      if (String(allTodos[i].id) === String(id)) { allTodos[i].done = next; break }
+    }
   }
   expandRange()
   if (next) {
     /* 完成：先播放打勾 + 淡出动画（停留原位），稍后再平滑下沉重排 */
-    animateCompleteThenSettle(id)
+    animateCompleteThenSettle(item)
   } else {
     render()
   }
@@ -1604,14 +1652,15 @@ async function toggleTodo(id) {
 
 /* 完成任务：先打勾淡出（原位），再用 FLIP 平滑下沉到已完成分组 */
 var completeSettleTimer = null
-function animateCompleteThenSettle(id) {
+function animateCompleteThenSettle(item) {
   clearTimeout(completeSettleTimer)
   var container = viewMode === 'day' ? todoList : (viewMode === 'week' ? weekPane : monthPane)
+  var instKey = instanceKey(item)
   /* 1. 在旧 DOM 上标记视觉完成（打勾 + 淡出），但不重排 */
   var li = null
   var nodes = container ? container.querySelectorAll('[data-id]') : []
   for (var i = 0; i < nodes.length; i++) {
-    if (nodes[i].getAttribute('data-id') === String(id)) { li = nodes[i]; break }
+    if (nodes[i].getAttribute('data-id') === instKey) { li = nodes[i]; break }
   }
   if (li) li.classList.add('done', 'completing')
   /* 2. 稍后执行 FLIP 重排 */
@@ -1668,7 +1717,10 @@ function celebrateIfDayAllDone(item) {
   if (!item) return
   var key = String(item.due_date || '').slice(0, 10)
   if (!key) return
-  var items = allTodos.filter(function (t) { return String(t.due_date || '').slice(0, 10) === key })
+  var d = parseDate(key)
+  if (!d) return
+  /* 用展开实例判断「这一天」的全部任务是否完成（重复任务按日期实例算） */
+  var items = expandBetween(d, d)
   if (items.length > 1 && items.every(function (t) { return t.done })) {
     var todayKey = fmtDate(startOfDay(new Date()))
     if (key === todayKey) showToast('今天的任务全部完成啦！🎉🏆')
@@ -1697,6 +1749,9 @@ async function deleteTodo(id, record) {
   if (res.error) { showToast(friendlyError(res.error)); return }
   var removed = Array.isArray(res.data) ? res.data : []
   if (removed.length === 0) { showToast('删除失败，该待办可能已不存在'); return }
+  /* 同步清理该任务的按日期完成记录，避免残留脏数据 */
+  try { await cloud.database.from('todo_done_dates').delete().eq('todo_id', numId(id)).select() } catch (e) {}
+  delete doneDatesMap[String(id)]
   var gone = removed[0] || record
   allTodos = allTodos.filter(function (t) { return String(t.id) !== String(id) })
   delete selectedIds[id]
@@ -1852,19 +1907,40 @@ $('bulkDoneBtn').addEventListener('click', async function () {
   /* id 在数据库里是 bigint，统一转成数字，避免 .in() 类型不匹配 */
   var idNums = ids.map(function (v) { return Number(v) }).filter(function (n) { return !isNaN(n) })
   if (idNums.length === 0) { showToast('请先选择要操作的任务'); return }
-  var res = await cloud.database.from('todos').update({ done: true }).in('id', idNums).select()
-  if (res.error) { showToast(friendlyError(res.error)); return }
-  var affected = Array.isArray(res.data) ? res.data : []
-  affected.forEach(function (row) {
-    for (var i = 0; i < allTodos.length; i++) {
-      if (String(allTodos[i].id) === String(row.id)) { allTodos[i].done = true; break }
-    }
+  /* 区分重复/非重复：重复任务只标记「当前查看日期」完成，非重复任务改 done 字段 */
+  var dateKey = fmtDate(cursor)
+  var repeatIds = []
+  var plainIds = []
+  ids.forEach(function (sid) {
+    var rec = findTodoById(sid)
+    if (rec && Array.isArray(rec.repeat_days) && rec.repeat_days.length > 0) repeatIds.push(sid)
+    else plainIds.push(sid)
   })
+  var ok = 0
+  for (var k = 0; k < repeatIds.length; k++) {
+    var rres = await cloud.database.from('todo_done_dates').insert({ todo_id: Number(repeatIds[k]), done_date: dateKey }).select()
+    if (rres.error) { showToast(friendlyError(rres.error)); return }
+    var rm = doneDatesMap[String(repeatIds[k])] || (doneDatesMap[String(repeatIds[k])] = {})
+    rm[dateKey] = true
+    ok++
+  }
+  if (plainIds.length > 0) {
+    var plainNums = plainIds.map(function (v) { return Number(v) })
+    var res = await cloud.database.from('todos').update({ done: true }).in('id', plainNums).select()
+    if (res.error) { showToast(friendlyError(res.error)); return }
+    var affected = Array.isArray(res.data) ? res.data : []
+    affected.forEach(function (row) {
+      for (var i = 0; i < allTodos.length; i++) {
+        if (String(allTodos[i].id) === String(row.id)) { allTodos[i].done = true; break }
+      }
+    })
+    ok += affected.length
+  }
   selectedIds = {}
   renderBulkBar()
   expandRange()
   render()
-  showToast('已标记完成 ' + affected.length + ' 项')
+  showToast('已标记完成 ' + ok + ' 项')
 })
 $('bulkDelBtn').addEventListener('click', async function () {
   var ids = Object.keys(selectedIds)
@@ -1877,6 +1953,8 @@ $('bulkDelBtn').addEventListener('click', async function () {
     if (removed.length === 0) continue
     removedRows.push(removed[0])
     allTodos = allTodos.filter(function (t) { return String(t.id) !== String(ids[i]) })
+    try { await cloud.database.from('todo_done_dates').delete().eq('todo_id', Number(ids[i])).select() } catch (e) {}
+    delete doneDatesMap[String(ids[i])]
   }
   selectedIds = {}
   bulkMode = false
@@ -1967,7 +2045,7 @@ function makeCheck(item) {
   check.textContent = '✓'
   check.setAttribute('role', 'checkbox')
   check.setAttribute('aria-checked', item.done ? 'true' : 'false')
-  check.addEventListener('click', function (e) { e.stopPropagation(); toggleTodo(item.id) })
+  check.addEventListener('click', function (e) { e.stopPropagation(); toggleTodo(item) })
   return check
 }
 function makeDel(item) {
@@ -2013,7 +2091,7 @@ function bindRowTap(el, item) {
   /* 整行点击 → 切换完成（对儿童更友好，点击热区大） */
   el.addEventListener('click', function () {
     if (bulkMode) { toggleSelect(item.id); return }
-    toggleTodo(item.id)
+    toggleTodo(item)
   })
 }
 /* 标题文字点击 → 打开详情（保留编辑/备注入口） */
@@ -2042,7 +2120,7 @@ function renderDay() {
     }
     var li = document.createElement('li')
     li.className = 'todo-item' + (t.done ? ' done' : '') + (t.priority ? ' pri' : '') + (bulkMode && selectedIds[String(t.id)] ? ' sel' : '')
-    li.setAttribute('data-id', String(t.id))
+    li.setAttribute('data-id', t.instKey || instanceKey(t))
     var title = document.createElement('span')
     title.className = 'todo-title'
     title.textContent = t.title
@@ -2136,7 +2214,7 @@ function renderWeek() {
         items.forEach(function (t) {
           var it = document.createElement('div')
           it.className = 'w-item' + (t.done ? ' done' : '') + (t.priority ? ' pri' : '')
-          it.setAttribute('data-id', String(t.id))
+          it.setAttribute('data-id', t.instKey || instanceKey(t))
           var title = document.createElement('span')
           title.className = 'w-title'
           title.textContent = t.title
