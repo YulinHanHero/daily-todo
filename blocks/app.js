@@ -2375,6 +2375,7 @@ function renderStats() {
   var card2 = document.createElement('div')
   card2.className = 'stat-card'
   card2.innerHTML = '<div class="stat-title">近 7 天完成趋势</div>'
+  var SPARK_H = 100          /* 与 style.css 里 .spark 的高度一致 */
   var maxV = 1
   s.last7.forEach(function (d) { if (d.total > maxV) maxV = d.total })
   var spark = document.createElement('div')
@@ -2384,9 +2385,12 @@ function renderStats() {
     col.className = 'spark-col'
     var barWrap = document.createElement('div')
     barWrap.className = 'spark-bar'
+    /* 浅色底 = 当天任务总量，深色柱 = 已完成数量（相对近 7 天最大总量归一） */
+    var barH = d.total ? Math.max(Math.round(d.total * SPARK_H / maxV), 6) : 0
+    barWrap.style.height = barH + 'px'
     var inner = document.createElement('i')
-    var h = d.total ? Math.round(d.done * 100 / maxV) : 0
-    inner.style.height = Math.max(h, d.total ? 6 : 0) + '%'
+    var fillH = d.done ? Math.max(Math.round(d.done * SPARK_H / maxV), 3) : 0
+    inner.style.height = fillH + 'px'
     barWrap.appendChild(inner)
     var x = document.createElement('span')
     x.className = 'spark-x'
@@ -2398,7 +2402,7 @@ function renderStats() {
   card2.appendChild(spark)
   var note2 = document.createElement('p')
   note2.className = 'stat-note'
-  note2.textContent = '柱子高度 = 当天已完成数量（浅色部分为当天任务总量）'
+  note2.textContent = '深色 = 当天已完成，浅色 = 当天任务总量'
   card2.appendChild(note2)
   statsWrap.appendChild(card2)
 
@@ -2413,8 +2417,6 @@ function renderStats() {
     em.textContent = '本月还没有任务'
     card3.appendChild(em)
   } else {
-    var maxT = 1
-    keys.forEach(function (k) { if (s.bySubject[k].total > maxT) maxT = s.bySubject[k].total })
     keys.sort(function (a, b) { return s.bySubject[b].total - s.bySubject[a].total })
     keys.forEach(function (k) {
       var v = s.bySubject[k]
@@ -2427,7 +2429,8 @@ function renderStats() {
       track.className = 'bar-track'
       var fill = document.createElement('span')
       fill.className = 'bar-fill'
-      fill.style.width = Math.round(v.total * 100 / maxT) + '%'
+      /* 填充宽度 = 该科目完成率（done/total），颜色 = 科目色 */
+      fill.style.width = (v.total ? Math.round(v.done * 100 / v.total) : 0) + '%'
       fill.style.background = subjectColor(k)
       track.appendChild(fill)
       var val = document.createElement('span')

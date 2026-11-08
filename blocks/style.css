@@ -679,7 +679,7 @@
   .bar-val { width: 38px; flex: none; text-align: right; color: var(--muted); }
   .spark { display: flex; align-items: flex-end; gap: 6px; height: 100px; }
   .spark-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end; }
-  .spark-bar { position: relative; width: 100%; flex: 1 1 auto; background: var(--primary-soft); border-radius: 5px 5px 0 0; overflow: hidden; }
+  .spark-bar { position: relative; width: 100%; flex: none; background: var(--primary-soft); border-radius: 5px 5px 0 0; overflow: hidden; }
   .spark-bar i { display: block; position: absolute; left: 0; right: 0; bottom: 0; width: 100%; background: var(--primary); border-radius: 5px 5px 0 0; }
   .spark-x { font-size: 10px; color: var(--muted-2); }
   .stat-empty { font-size: 13px; color: var(--muted-2); text-align: center; padding: 18px 0; }
