@@ -1282,12 +1282,12 @@ function parseDate(s) {
   var p = String(s).split('-')
   return new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10))
 }
-/* 中文日期展示：'2026-11-08' -> '11 月 8 日 周日'（与头部日期风格一致） */
+/* 斜杠日期展示：'2026-11-08' -> '2026/11/8 周X'（与头部日期风格一致） */
 function fmtDateCN(s) {
   if (!s) return ''
   var d = parseDate(s)
   if (isNaN(d.getTime())) return ''
-  return (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日 · 周' + WEEK_CN[d.getDay()]
+  return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate() + ' · 周' + WEEK_CN[d.getDay()]
 }
 /* 同步日期选择器的中文展示文本 */
 function syncDateDisplay(input, display) {
