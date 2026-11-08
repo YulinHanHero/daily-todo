@@ -1287,7 +1287,68 @@ function closeAddSheet() {
   addForm.classList.remove('show')
 }
 
-fabBtn.addEventListener('click', openAddSheet)
+/* 加号按钮：可拖动 + 点击区分 */
+(function initFabDrag() {
+  var dragging = false
+  var moved = false
+  var startX = 0, startY = 0
+  var origX = 0, origY = 0
+
+  function getPos() {
+    var r = fabBtn.getBoundingClientRect()
+    return { x: r.left, y: r.top }
+  }
+
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)) }
+
+  function onStart(e) {
+    var pt = e.touches ? e.touches[0] : e
+    dragging = true
+    moved = false
+    startX = pt.clientX
+    startY = pt.clientY
+    var p = getPos()
+    origX = p.x
+    origY = p.y
+    fabBtn.classList.add('dragging')
+  }
+
+  function onMove(e) {
+    if (!dragging) return
+    var pt = e.touches ? e.touches[0] : e
+    var dx = pt.clientX - startX
+    var dy = pt.clientY - startY
+    if (!moved && Math.abs(dx) + Math.abs(dy) < 6) return
+    moved = true
+    var size = fabBtn.offsetWidth
+    var nx = clamp(origX + dx, 8, window.innerWidth - size - 8)
+    var ny = clamp(origY + dy, 8, window.innerHeight - size - 8)
+    fabBtn.style.left = nx + 'px'
+    fabBtn.style.top = ny + 'px'
+    fabBtn.style.right = 'auto'
+    fabBtn.style.bottom = 'auto'
+    if (e.cancelable) e.preventDefault()
+  }
+
+  function onEnd() {
+    if (!dragging) return
+    dragging = false
+    fabBtn.classList.remove('dragging')
+  }
+
+  fabBtn.addEventListener('mousedown', onStart)
+  fabBtn.addEventListener('touchstart', onStart, { passive: true })
+  document.addEventListener('mousemove', onMove)
+  document.addEventListener('touchmove', onMove, { passive: false })
+  document.addEventListener('mouseup', onEnd)
+  document.addEventListener('touchend', onEnd)
+
+  /* 点击打开（仅在未拖动时触发） */
+  fabBtn.addEventListener('click', function (e) {
+    if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; return }
+    openAddSheet()
+  })
+})()
 sheetClose.addEventListener('click', closeAddSheet)
 addMask.addEventListener('click', closeAddSheet)
 

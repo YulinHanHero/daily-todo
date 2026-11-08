@@ -304,16 +304,18 @@
   }
   .add-btn:active { filter: brightness(.92); }
 
-  /* 浮动加号按钮 */
+  /* 浮动加号按钮：可拖动 */
   .fab {
     position: fixed; right: 22px; bottom: calc(28px + env(safe-area-inset-bottom));
     width: 56px; height: 56px; border-radius: 50%; border: none; z-index: 150;
     background: var(--primary); color: #fff; font-size: 30px; line-height: 1;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 6px 18px rgba(79, 124, 255, .4); cursor: pointer;
-    transition: transform .15s;
+    box-shadow: 0 6px 18px rgba(79, 124, 255, .4); cursor: grab;
+    touch-action: none; -webkit-user-select: none; user-select: none;
+    transition: transform .15s, box-shadow .2s;
   }
-  .fab:active { transform: scale(.92); }
+  .fab:active { cursor: grabbing; }
+  .fab.dragging { transform: scale(1.06); box-shadow: 0 10px 26px rgba(79, 124, 255, .55); transition: none; }
 
   .counter-row {
     display: flex; justify-content: space-between; align-items: center;
