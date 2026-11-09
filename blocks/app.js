@@ -165,7 +165,13 @@ var BUILTIN_SUBJECTS = [
 var SUBJECT_PALETTE = ['#e5484d', '#2563eb', '#16a34a', '#ea8600', '#7a5cff', '#0891b2', '#db2777', '#65a30d', '#c2410c', '#4f7cff']
 
 function subjectRegistry() {
-  var list = BUILTIN_SUBJECTS.slice()
+  var list = []
+  /* 先放内置科目（不含「其他」），保持固定顺序 */
+  BUILTIN_SUBJECTS.forEach(function (s) {
+    if (s.key === 'qita') return
+    list.push(s)
+  })
+  /* 再放用户自定义科目 */
   customSubjects.forEach(function (s) {
     list.push({
       key: 'c' + s.id,
@@ -176,6 +182,10 @@ function subjectRegistry() {
       id: s.id
     })
   })
+  /* 「其他」始终放在最后 */
+  for (var i = 0; i < BUILTIN_SUBJECTS.length; i++) {
+    if (BUILTIN_SUBJECTS[i].key === 'qita') { list.push(BUILTIN_SUBJECTS[i]); break }
+  }
   return list
 }
 function subjectByKey(key) {

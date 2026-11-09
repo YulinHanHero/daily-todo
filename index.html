@@ -697,8 +697,9 @@
   .stat-note { font-size: 11px; color: var(--muted-2); margin-top: 10px; line-height: 1.5; }
 
   /* ---------- 科目选择器（新增表单内） ---------- */
-  .subject-pick { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
-  .subject-pick::-webkit-scrollbar { display: none; }
+  .subject-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+  .opts-row.subject-row { align-items: flex-start; }
+  .opts-row.subject-row .date-label { padding-top: 8px; }
   .pick-chip {
     flex: none; border: 1.5px solid var(--border); background: var(--surface-2);
     color: var(--text-2); font-size: 12px; padding: 5px 11px; border-radius: 999px;
@@ -913,7 +914,7 @@
           </label>
           <button type="submit" class="add-btn" id="addBtn" data-page-node-id="32B4OpMSvkXA0xEKPGa7nw">添加</button>
         </div>
-        <div class="opts-row">
+        <div class="opts-row subject-row">
           <span class="date-label">科目 <i class="req-mark">*</i></span>
           <div class="subject-pick" id="addSubjectPick"></div>
         </div>
@@ -1320,7 +1321,13 @@ var BUILTIN_SUBJECTS = [
 var SUBJECT_PALETTE = ['#e5484d', '#2563eb', '#16a34a', '#ea8600', '#7a5cff', '#0891b2', '#db2777', '#65a30d', '#c2410c', '#4f7cff']
 
 function subjectRegistry() {
-  var list = BUILTIN_SUBJECTS.slice()
+  var list = []
+  /* 先放内置科目（不含「其他」），保持固定顺序 */
+  BUILTIN_SUBJECTS.forEach(function (s) {
+    if (s.key === 'qita') return
+    list.push(s)
+  })
+  /* 再放用户自定义科目 */
   customSubjects.forEach(function (s) {
     list.push({
       key: 'c' + s.id,
@@ -1331,6 +1338,10 @@ function subjectRegistry() {
       id: s.id
     })
   })
+  /* 「其他」始终放在最后 */
+  for (var i = 0; i < BUILTIN_SUBJECTS.length; i++) {
+    if (BUILTIN_SUBJECTS[i].key === 'qita') { list.push(BUILTIN_SUBJECTS[i]); break }
+  }
   return list
 }
 function subjectByKey(key) {
