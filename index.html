@@ -919,8 +919,6 @@
           <div class="subject-pick" id="addSubjectPick"></div>
         </div>
         <div class="opts-row add-extra">
-          <span class="date-label">更多</span>
-          <button type="button" class="link-btn" id="manageSubjectBtn">管理科目</button>
           <label class="pri-toggle">
             <input type="checkbox" id="addPriority">
             <span>标为重要</span>
@@ -1094,6 +1092,15 @@
         <span class="switch-knob"></span>
       </button>
     </div>
+
+    <button type="button" class="settings-menu-item" id="menuSubjectBtn">
+      <span class="settings-menu-icon">📚</span>
+      <div class="settings-menu-info">
+        <div class="settings-menu-name">管理科目</div>
+        <div class="settings-menu-desc">新增或删除自定义科目</div>
+      </div>
+      <span class="settings-menu-arrow">›</span>
+    </button>
   </div>
 
   <div class="settings-section">
@@ -1200,7 +1207,7 @@ var addForm = $('addForm')
 var themeBtn = $('themeBtn')
 var filterBar = $('filterBar'), searchInput = $('searchInput'), subjectChips = $('subjectChips'), sortSelect = $('sortSelect')
 var bulkToggle = $('bulkToggle'), bulkSwitchWrap = $('bulkSwitchWrap'), bulkBar = $('bulkBar'), bulkCount = $('bulkCount')
-var addSubjectPick = $('addSubjectPick'), addPriority = $('addPriority'), manageSubjectBtn = $('manageSubjectBtn')
+var addSubjectPick = $('addSubjectPick'), addPriority = $('addPriority')
 var detailMask = $('detailMask'), detailCard = $('detailCard'), detailClose = $('detailClose')
 var dTitleInput = $('dTitleInput'), dDueInput = $('dDueInput'), dPriority = $('dPriority')
 var dStartInput = $('dStartInput'), dStartField = $('dStartField')
@@ -1216,6 +1223,7 @@ var settingsBtn = $('settingsBtn')
 var settingsMask = $('settingsMask'), settingsCard = $('settingsCard'), settingsClose = $('settingsClose')
 var settingsAvatar = $('settingsAvatar'), settingsName = $('settingsName'), settingsPhone = $('settingsPhone')
 var menuNameBtn = $('menuNameBtn'), menuNameDesc = $('menuNameDesc'), menuPwdBtn = $('menuPwdBtn')
+var menuSubjectBtn = $('menuSubjectBtn')
 var soundToggle = $('soundToggle')
 var nameMask = $('nameMask'), nameCard = $('nameCard'), nameBackBtn = $('nameBackBtn'), nameClose = $('nameClose')
 var settingsNameInput = $('settingsNameInput'), settingsSaveNameBtn = $('settingsSaveNameBtn'), settingsNameError = $('settingsNameError')
@@ -2612,7 +2620,7 @@ addPriority.addEventListener('change', function () { /* 状态读取即可 */ })
 
 /* ================= 科目管理 ================= */
 var pendingColor = SUBJECT_PALETTE[0]
-manageSubjectBtn.addEventListener('click', function () { openSubjectManager() })
+menuSubjectBtn.addEventListener('click', function () { closeSettings(); openSubjectManager() })
 subjectClose.addEventListener('click', closeSubjectManager)
 subjectCancelBtn.addEventListener('click', closeSubjectManager)
 subjectMask.addEventListener('click', closeSubjectManager)
