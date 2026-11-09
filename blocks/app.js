@@ -1101,6 +1101,7 @@ addForm.addEventListener('submit', async function (e) {
 async function addSingleTodo() {
   var title = todoInput.value.trim()
   if (!title) { todoInput.focus(); return }
+  if (!addSubjectKey) { showToast('请先选择一个科目'); return }
   var ownerName = (session && session.user && session.user.name) || null
   var repArr = Object.keys(selectedRepeat).map(Number).sort(function (a, b) { return a - b })
   var due = dueInput.value || fmtDate(cursor)
@@ -1244,6 +1245,9 @@ function renderBatchPreview() {
 async function addBatchTodos() {
   var items = parseBatch(batchInput.value)
   if (items.length === 0) { batchInput.focus(); showToast('没有识别到有效的作业内容'); return }
+  /* 科目必选：存在未识别出科目（归为「其他」）的条目，且未手动选科目时，要求选择 */
+  var hasUnassigned = items.some(function (it) { return it.subject === 'qita' })
+  if (hasUnassigned && !addSubjectKey) { showToast('有作业未识别出科目，请先选择一个科目'); return }
   var due = dueInput.value || fmtDate(cursor)
   var ownerName = (session && session.user && session.user.name) || null
   var repArr = Object.keys(selectedRepeat).map(Number).sort(function (a, b) { return a - b })
